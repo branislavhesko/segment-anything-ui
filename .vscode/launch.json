@@ -13,6 +13,18 @@
             "justMyCode": true,
             "env": {
                 "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "UI",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/segment_anything_ui/main_window.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
         }
     ]
 }

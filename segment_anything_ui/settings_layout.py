@@ -1,5 +1,5 @@
 import cv2
-from PySide6.QtWidgets import QPushButton, QWidget, QFileDialog, QGridLayout, QLineEdit, QLabel
+from PySide6.QtWidgets import QPushButton, QWidget, QFileDialog, QVBoxLayout, QLineEdit, QLabel
 
 
 class FilesHolder:
@@ -20,7 +20,7 @@ class FilesHolder:
 class SettingsLayout(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.layout = QGridLayout(self)
+        self.layout = QVBoxLayout(self)
         self.open_files = QPushButton("Open Files")
         self.open_files.clicked.connect(self.on_open_files)
         self.next_file = QPushButton("Next File")
@@ -31,11 +31,18 @@ class SettingsLayout(QWidget):
         self.checkpoint_path = QLineEdit(self, text="ADD.pth")
         self.precompute_button = QPushButton("Precompute all embeddings")
         self.precompute_button.clicked.connect(self.on_precompute)
-        self.layout.addWidget(self.open_files, 0, 0)
-        self.layout.addWidget(self.next_file, 1, 0)
-        self.layout.addWidget(self.save_mask, 2, 0)
-        self.layout.addWidget(self.checkpoint_path_label, 3, 0)
-        self.layout.addWidget(self.checkpoint_path, 4, 0)
+        self.show_image = QPushButton("Show Image")
+        self.show_visualization = QPushButton("Show Visualization")
+        self.show_image.clicked.connect(self.on_show_image)
+        self.show_visualization.clicked.connect(self.on_show_visualization)
+        self.layout.addWidget(self.open_files)
+        self.layout.addWidget(self.next_file)
+        self.layout.addWidget(self.save_mask)
+        self.layout.addWidget(self.checkpoint_path_label)
+        self.layout.addWidget(self.checkpoint_path)
+        self.layout.addWidget(self.precompute_button)
+        self.layout.addWidget(self.show_image)
+        self.layout.addWidget(self.show_visualization)
         self.files = FilesHolder()
 
     def on_next_file(self):
@@ -44,6 +51,12 @@ class SettingsLayout(QWidget):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         image = cv2.resize(image, (512, 512)) # TODO: Remove this
         self.parent().update(image)
+
+    def on_show_image(self):
+        pass
+
+    def on_show_visualization(self):
+        pass
 
     def on_precompute(self):
         pass
