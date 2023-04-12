@@ -1,10 +1,11 @@
 import sys
 
 import numpy as np
-from PySide6 import QtCore, QtWidgets
-from PySide6.QtWidgets import QApplication, QGridLayout, QMainWindow, QFileDialog, QMessageBox, QWidget
-from segment_anything import sam_model_registry, SamAutomaticMaskGenerator, SamPredictor
 import torch
+from PySide6.QtWidgets import (QApplication, QGridLayout,
+                               QMessageBox, QWidget)
+from segment_anything import (SamAutomaticMaskGenerator, SamPredictor,
+                              sam_model_registry)
 
 from segment_anything_ui.annotation_layout import AnnotationLayout
 from segment_anything_ui.image_pixmap import ImagePixmap
@@ -19,7 +20,7 @@ class SegmentAnythingUI(QWidget):
         self.setWindowTitle("Segment Anything UI")
         self.setGeometry(100, 100, 800, 600)
         self.layout = QGridLayout(self)
-        self.image_label = QtWidgets.QLabel(self)
+        self.image_label = DrawLabel(self)
         self.settings = SettingsLayout(self)
         self.annotation_layout = AnnotationLayout(self)
         self.layout.addWidget(self.annotation_layout, 0, 0)
@@ -36,8 +37,13 @@ class SegmentAnythingUI(QWidget):
         self.image_label.setPixmap(pixmap)
 
     def init_sam(self):
-        sam = sam_model_registry["vit_h"](checkpoint=str(self.settings.checkpoint_path.text()))
-        sam.to(device=self.device)
+        try:
+            sam = sam_model_registry["vit_h"](checkpoint=str(self.settings.checkpoint_path.text()))
+            sam.to(device=self.device)
+        except Exception as e:
+            print(e)
+            QMessageBox.critical(self, "Error", "Could not load model")
+            return None
         return sam
 
 
