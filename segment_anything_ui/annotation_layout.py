@@ -40,6 +40,11 @@ class AnnotationLayout(QWidget):
         self.layout.addWidget(self.cancel_annotation)
         self.layout.addWidget(self.save_annotation)
         self.layout.addWidget(self.annotation_settings)
+        self.add_point.clicked.connect(self.on_add_point)
+        self.add_box.clicked.connect(self.on_add_box)
+        self.annotate_all.clicked.connect(self.on_annotate_all)
+        self.cancel_annotation.clicked.connect(self.on_cancel_annotation)
+        self.save_annotation.clicked.connect(self.on_save_annotation)
 
     def on_add_point(self):
         pass
@@ -51,7 +56,7 @@ class AnnotationLayout(QWidget):
         pass
 
     def on_cancel_annotation(self):
-        pass
+        self.parent().image_label.clear_points()
 
     def on_save_annotation(self):
         pass
