@@ -40,6 +40,8 @@ class SettingsLayout(QWidget):
         self.layout.addWidget(self.save_mask)
         self.layout.addWidget(self.checkpoint_path_label)
         self.layout.addWidget(self.checkpoint_path)
+        self.checkpoint_path.returnPressed.connect(self.on_checkpoint_path_changed)
+        self.checkpoint_path.editingFinished.connect(self.on_checkpoint_path_changed)
         self.layout.addWidget(self.precompute_button)
         self.layout.addWidget(self.show_image)
         self.layout.addWidget(self.show_visualization)
@@ -63,6 +65,9 @@ class SettingsLayout(QWidget):
 
     def on_save_mask(self):
         pass
+
+    def on_checkpoint_path_changed(self):
+        self.parent().sam = self.parent().init_sam()
 
     def on_open_files(self):
         files, _ = QFileDialog.getOpenFileNames(self, "Open Files", "", "Image Files (*.png *.jpg *.bmp)")

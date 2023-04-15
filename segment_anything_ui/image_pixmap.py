@@ -1,4 +1,5 @@
-from PySide6.QtGui import QImage, QPixmap
+from PySide6.QtGui import QImage, QPixmap, QPainter, QPen
+from PySide6.QtCore import Qt
 
 
 class ImagePixmap(QPixmap):

@@ -1,4 +1,5 @@
 from PySide6.QtWidgets import QWidget, QLabel, QSpinBox, QDoubleSpinBox, QVBoxLayout, QPushButton
+from segment_anything_ui.draw_label import PaintType
 
 
 class AnnotationLayoutSettings(QWidget):
@@ -47,16 +48,16 @@ class AnnotationLayout(QWidget):
         self.save_annotation.clicked.connect(self.on_save_annotation)
 
     def on_add_point(self):
-        pass
+        self.parent().image_label.change_paint_type(PaintType.POINT)
 
     def on_add_box(self):
-        pass
+        self.parent().image_label.change_paint_type(PaintType.BOX)
 
     def on_annotate_all(self):
         pass
 
     def on_cancel_annotation(self):
-        self.parent().image_label.clear_points()
+        pass
 
     def on_save_annotation(self):
         pass
