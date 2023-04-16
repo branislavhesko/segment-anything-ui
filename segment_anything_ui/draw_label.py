@@ -1,3 +1,4 @@
+import copy
 import dataclasses
 from enum import Enum
 
@@ -22,6 +23,9 @@ class BoundingBox:
     xend: float = -1.
     yend: float = -1.
 
+    def to_numpy(self):
+        return np.array([self.xstart, self.ystart, self.xend, self.yend])
+
 
 class DrawLabel(QtWidgets.QLabel):
 
@@ -29,7 +33,7 @@ class DrawLabel(QtWidgets.QLabel):
         super().__init__(parent)
         self.positive_points = []
         self.negative_points = []
-        self.bounding_boxes = []
+        self.bounding_box = None
         self.partial_box = BoundingBox(0, 0)
         self._paint_type = PaintType.POINT
 
@@ -43,9 +47,14 @@ class DrawLabel(QtWidgets.QLabel):
         painter.setRenderHint(QPainter.Antialiasing, False)
 
         painter.setPen(pen_box)
-        for box in self.bounding_boxes:
-            print(f"Drawing box {box}")
-            painter.drawRect(box.xstart, box.ystart, box.xend - box.xstart, box.yend - box.ystart)
+
+        if self.bounding_box is not None:
+            painter.drawRect(
+                self.bounding_box.xstart,
+                self.bounding_box.ystart,
+                self.bounding_box.xend - self.bounding_box.xstart,
+                self.bounding_box.yend - self.bounding_box.ystart
+            )
 
         painter.setPen(pen_partial)
         painter.drawRect(self.partial_box.xstart, self.partial_box.ystart,
@@ -74,7 +83,7 @@ class DrawLabel(QtWidgets.QLabel):
 
     def mouseMoveEvent(self, ev: PySide6.QtGui.QMouseEvent) -> None:
         if self._paint_type == PaintType.BOX:
-            self.partial_box = self.bounding_boxes[-1]
+            self.partial_box = copy.deepcopy(self.bounding_box)
             self.partial_box.xend = ev.pos().x()
             self.partial_box.yend = ev.pos().y()
             self.update()
@@ -83,35 +92,40 @@ class DrawLabel(QtWidgets.QLabel):
         if self._paint_type == PaintType.POINT:
             if cursor_event.button() == QtCore.Qt.LeftButton:
                 self.positive_points.append(cursor_event.pos())
+                print(self.size())
             elif cursor_event.button() == QtCore.Qt.RightButton:
                 self.negative_points.append(cursor_event.pos())
             # self.chosen_points.append(self.mapFromGlobal(QtGui.QCursor.pos()))
         elif self._paint_type == PaintType.BOX:
             if cursor_event.button() == QtCore.Qt.LeftButton:
-                self.bounding_boxes[-1].xend = cursor_event.pos().x()
-                self.bounding_boxes[-1].yend = cursor_event.pos().y()
+                self.bounding_box.xend = cursor_event.pos().x()
+                self.bounding_box.yend = cursor_event.pos().y()
                 self.partial_box = BoundingBox(0, 0, 0, 0)
-        self.parent().annotator.make_prediction()
+        self.parent().annotator.make_prediction(self.get_annotations())
         self.parent().annotator.visualize_last_mask()
         self.update()
 
     def mousePressEvent(self, ev: PySide6.QtGui.QMouseEvent) -> None:
         if self._paint_type == PaintType.BOX and ev.button() == QtCore.Qt.LeftButton:
-            new_box = BoundingBox(xstart=ev.pos().x(), ystart=ev.pos().y())
-            self.bounding_boxes.append(new_box)
+            self.bounding_box = BoundingBox(xstart=ev.pos().x(), ystart=ev.pos().y())
 
-
-    def get_points(self):
-        positive_points = np.array(self.positive_points).reshape(-1, 2)
-        negative_points = np.array(self.negative_points).reshape(-1, 2)
-        labels = np.array([1] * len(positive_points) + [0] * len(negative_points))
+    def get_annotations(self):
+        positive_points = [(p.x(), p.y()) for p in self.positive_points]
+        positive_points = np.array(positive_points).reshape(-1, 2)
+        negative_points = [(p.x(), p.y()) for p in self.negative_points]
+        negative_points = np.array(negative_points).reshape(-1, 2)
+        labels = np.array([1, ] * len(positive_points) + [0, ] * len(negative_points))
+        print(f"Positive points: {positive_points}")
+        print(f"Negative points: {negative_points}")
+        print(f"Labels: {labels}")
         return {
             "points": np.concatenate([positive_points, negative_points], axis=0),
-            "labels": labels
+            "labels": labels,
+            "bounding_boxes": self.bounding_box.to_numpy() if self.bounding_box else None
         }
 
     def clear(self):
         self.positive_points = []
         self.negative_points = []
-        self.bounding_boxes = []
+        self.bounding_box = None
         self.update()

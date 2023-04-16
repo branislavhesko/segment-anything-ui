@@ -34,6 +34,7 @@ class AnnotationLayout(QWidget):
         self.annotate_all = QPushButton("Annotate All")
         self.cancel_annotation = QPushButton("Cancel Annotation")
         self.save_annotation = QPushButton("Save Annotation")
+        self.save_annotation.setShortcut("N")
         self.annotation_settings = AnnotationLayoutSettings(self)
         self.layout.addWidget(self.add_point)
         self.layout.addWidget(self.add_box)
@@ -57,7 +58,9 @@ class AnnotationLayout(QWidget):
         pass
 
     def on_cancel_annotation(self):
-        pass
+        self.parent().image_label.clear()
 
     def on_save_annotation(self):
-        pass
+        self.parent().annotator.save_mask()
+        self.parent().update(self.parent().annotator.merge_image_visualization())
+        self.parent().image_label.clear()

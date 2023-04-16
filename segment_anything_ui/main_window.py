@@ -20,7 +20,7 @@ class SegmentAnythingUI(QWidget):
         super().__init__()
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.setWindowTitle("Segment Anything UI")
-        self.setGeometry(100, 100, 800, 600)
+        # self.setGeometry(100, 100, 800, 600)
         self.layout = QGridLayout(self)
         self.image_label = DrawLabel(self)
         self.settings = SettingsLayout(self)
@@ -30,11 +30,12 @@ class SegmentAnythingUI(QWidget):
         self.layout.addWidget(self.annotation_layout, 0, 0)
         self.layout.addWidget(self.image_label, 0, 1)
         self.layout.addWidget(self.settings, 0, 2)
-        self.set_image(np.zeros((512, 512, 3), dtype=np.float64))
+        self.set_image(np.zeros((512, 512, 3), dtype=np.uint8))
         self.show()
 
     def set_image(self, image: np.ndarray):
         self.annotator.set_image(image).make_embedding()
+        self.annotator.clear()
         self.update(image)
 
     def update(self, image: np.ndarray):
@@ -52,6 +53,9 @@ class SegmentAnythingUI(QWidget):
             QMessageBox.critical(self, "Error", "Could not load model")
             return None
         return sam
+
+    def get_mask(self):
+        return self.annotator.make_instance_mask()
 
 
 

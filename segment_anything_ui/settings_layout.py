@@ -28,7 +28,7 @@ class SettingsLayout(QWidget):
         self.save_mask.clicked.connect(self.on_save_mask)
         self.next_file.clicked.connect(self.on_next_file)
         self.checkpoint_path_label = QLabel(self, text="Checkpoint Path")
-        self.checkpoint_path = QLineEdit(self, text="ADD.pth")
+        self.checkpoint_path = QLineEdit(self, text="sam_vit_h_4b8939.pth")
         self.precompute_button = QPushButton("Precompute all embeddings")
         self.precompute_button.clicked.connect(self.on_precompute)
         self.show_image = QPushButton("Show Image")
@@ -51,7 +51,7 @@ class SettingsLayout(QWidget):
         file = self.files.get_next()
         image = cv2.imread(file, cv2.IMREAD_UNCHANGED)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        image = cv2.resize(image, (512, 512)) / 255. # TODO: Remove this
+        image = cv2.resize(image, (512, 512))  # TODO: Remove this
         self.parent().set_image(image)
 
     def on_show_image(self):
@@ -64,7 +64,8 @@ class SettingsLayout(QWidget):
         pass
 
     def on_save_mask(self):
-        pass
+        mask = self.parent().get_mask()
+        cv2.imwrite("mask.png", mask.astype("uint8"))
 
     def on_checkpoint_path_changed(self):
         self.parent().sam = self.parent().init_sam()
