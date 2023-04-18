@@ -55,10 +55,11 @@ class AnnotationLayout(QWidget):
         self.parent().image_label.change_paint_type(PaintType.BOX)
 
     def on_annotate_all(self):
-        pass
+        annotator = self.parent().annotator
 
     def on_cancel_annotation(self):
         self.parent().image_label.clear()
+        self.parent().update(self.parent().annotator.merge_image_visualization())
 
     def on_save_annotation(self):
         self.parent().annotator.save_mask()

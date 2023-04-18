@@ -46,7 +46,7 @@ class SegmentAnythingUI(QWidget):
 
     def init_sam(self):
         try:
-            sam = sam_model_registry["vit_h"](checkpoint=str(self.settings.checkpoint_path.text()))
+            sam = sam_model_registry["vit_b"](checkpoint=str(self.settings.checkpoint_path.text()))
             sam.to(device=self.device)
         except Exception as e:
             print(e)

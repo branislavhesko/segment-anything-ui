@@ -3,7 +3,7 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 from PySide6.QtWidgets import QWidget
-from segment_anything import SamPredictor
+from segment_anything import SamPredictor, automatic_mask_generator
 import torch
 
 
@@ -11,6 +11,18 @@ def get_cmap(n, name='hsv'):
     '''Returns a function that maps each index in 0, 1, ..., n-1 to a distinct
     RGB color; the keyword argument name must be a standard mpl colormap name.'''
     return plt.cm.get_cmap(name, n)
+
+
+@dataclasses.dataclass()
+class AutomaticMaskGenerator:
+    points_per_side: int = 32
+    pred_iou_thresh: float = 0.88
+    stability_score_thresh: float = 0.95
+    stability_score_offset: float = 1.0
+    box_nms_thresh: float = 0.7
+    crop_n_layers: int = 0
+    crop_nms_thresh: float = 0.7
+
 
 
 @dataclasses.dataclass()
@@ -37,6 +49,13 @@ class Annotator:
             return
         self.predictor = SamPredictor(self.sam)
         self.predictor.set_image(self.image)
+
+    def predict_all(self, settings: AutomaticMaskGenerator):
+        generator = automatic_mask_generator.SamAutomaticMaskGenerator(
+            model=self.sam,
+            **dataclasses.asdict(settings)
+        )
+        generator.generate(self.image)
 
     # TODO: add box support
     def make_prediction(self, annotation: dict):
@@ -74,6 +93,8 @@ class Annotator:
         return mask_argmax
 
     def merge_image_visualization(self):
+        if not len(self.mask):
+            return self.image
         self.visualization = cv2.addWeighted(self.image, 0.5, self.visualize_mask(), 0.5, 0)
         return self.visualization
 

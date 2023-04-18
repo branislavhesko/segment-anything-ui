@@ -128,4 +128,5 @@ class DrawLabel(QtWidgets.QLabel):
         self.positive_points = []
         self.negative_points = []
         self.bounding_box = None
+        self.partial_box = BoundingBox(0, 0, 0, 0)
         self.update()

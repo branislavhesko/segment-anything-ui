@@ -28,7 +28,7 @@ class SettingsLayout(QWidget):
         self.save_mask.clicked.connect(self.on_save_mask)
         self.next_file.clicked.connect(self.on_next_file)
         self.checkpoint_path_label = QLabel(self, text="Checkpoint Path")
-        self.checkpoint_path = QLineEdit(self, text="sam_vit_h_4b8939.pth")
+        self.checkpoint_path = QLineEdit(self, text="sam_vit_b_01ec64.pth")
         self.precompute_button = QPushButton("Precompute all embeddings")
         self.precompute_button.clicked.connect(self.on_precompute)
         self.show_image = QPushButton("Show Image")
