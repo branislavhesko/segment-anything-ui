@@ -1,5 +1,8 @@
+import numpy as np
 from PySide6.QtWidgets import QWidget, QLabel, QSpinBox, QDoubleSpinBox, QVBoxLayout, QPushButton
+
 from segment_anything_ui.draw_label import PaintType
+from segment_anything_ui.annotator import AutomaticMaskGenerator
 
 
 class AnnotationLayoutSettings(QWidget):
@@ -55,7 +58,11 @@ class AnnotationLayout(QWidget):
         self.parent().image_label.change_paint_type(PaintType.BOX)
 
     def on_annotate_all(self):
-        annotator = self.parent().annotator
+        annotated = self.parent().annotator.predict_all(AutomaticMaskGenerator())
+        masks = [m["segmentation"] for m in annotated]
+        masks = np.stack(masks, axis=0)
+        self.parent().annotator.mask = masks
+
 
     def on_cancel_annotation(self):
         self.parent().image_label.clear()
