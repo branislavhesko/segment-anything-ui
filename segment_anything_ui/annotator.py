@@ -35,6 +35,7 @@ class Annotator:
     visualization: np.ndarray | None = None
     last_mask: np.ndarray | None = None
     parent: QWidget | None = None
+    mask_id: int = -1
 
     def __post_init__(self):
         self.MAX_MASKS = 10

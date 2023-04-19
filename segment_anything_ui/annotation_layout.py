@@ -38,19 +38,27 @@ class AnnotationLayout(QWidget):
         self.manual_polygon = QPushButton("Manual Polygon")
         self.cancel_annotation = QPushButton("Cancel Annotation")
         self.save_annotation = QPushButton("Save Annotation")
+        self.pick_mask = QPushButton("Pick Mask")
         self.save_annotation.setShortcut("N")
         self.annotation_settings = AnnotationLayoutSettings(self)
         self.layout.addWidget(self.add_point)
         self.layout.addWidget(self.add_box)
         self.layout.addWidget(self.annotate_all)
+        self.layout.addWidget(self.pick_mask)
         self.layout.addWidget(self.cancel_annotation)
         self.layout.addWidget(self.save_annotation)
+        self.layout.addWidget(self.manual_polygon)
         self.layout.addWidget(self.annotation_settings)
         self.add_point.clicked.connect(self.on_add_point)
         self.add_box.clicked.connect(self.on_add_box)
         self.annotate_all.clicked.connect(self.on_annotate_all)
         self.cancel_annotation.clicked.connect(self.on_cancel_annotation)
         self.save_annotation.clicked.connect(self.on_save_annotation)
+        self.pick_mask.clicked.connect(self.on_pick_mask)
+        self.manual_polygon.clicked.connect(self.on_manual_polygon)
+
+    def on_pick_mask(self):
+        self.parent().image_label.change_paint_type(PaintType.MASK_PICKER)
 
     def on_manual_polygon(self):
         self.parent().image_label.change_paint_type(PaintType.POLYGON)
