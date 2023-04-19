@@ -30,7 +30,7 @@ class SegmentAnythingUI(QWidget):
         self.layout.addWidget(self.annotation_layout, 0, 0)
         self.layout.addWidget(self.image_label, 0, 1)
         self.layout.addWidget(self.settings, 0, 2)
-        self.set_image(np.zeros((512, 512, 3), dtype=np.uint8))
+        self.set_image(np.zeros((1024, 1024, 3), dtype=np.uint8))
         self.show()
 
     def set_image(self, image: np.ndarray):
@@ -46,7 +46,7 @@ class SegmentAnythingUI(QWidget):
 
     def init_sam(self):
         try:
-            sam = sam_model_registry["vit_b"](checkpoint=str(self.settings.checkpoint_path.text()))
+            sam = sam_model_registry["vit_l"](checkpoint=str(self.settings.checkpoint_path.text()))
             sam.to(device=self.device)
         except Exception as e:
             print(e)

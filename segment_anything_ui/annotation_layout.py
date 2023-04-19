@@ -53,7 +53,7 @@ class AnnotationLayout(QWidget):
         self.save_annotation.clicked.connect(self.on_save_annotation)
 
     def on_manual_polygon(self):
-        self.parent().image_label.change_paint_type(PaintType.POINT)
+        self.parent().image_label.change_paint_type(PaintType.POLYGON)
 
     def on_add_point(self):
         self.parent().image_label.change_paint_type(PaintType.POINT)
@@ -62,11 +62,8 @@ class AnnotationLayout(QWidget):
         self.parent().image_label.change_paint_type(PaintType.BOX)
 
     def on_annotate_all(self):
-        annotated = self.parent().annotator.predict_all(AutomaticMaskGenerator())
-        masks = [m["segmentation"] for m in annotated]
-        masks = np.stack(masks, axis=0)
-        self.parent().annotator.mask = masks
-
+        self.parent().annotator.predict_all(AutomaticMaskGenerator())
+        self.parent().update(self.parent().annotator.merge_image_visualization())
 
     def on_cancel_annotation(self):
         self.parent().image_label.clear()

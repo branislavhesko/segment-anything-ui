@@ -17,7 +17,7 @@ def get_cmap(n, name='hsv'):
 class AutomaticMaskGenerator:
     points_per_side: int = 32
     pred_iou_thresh: float = 0.88
-    stability_score_thresh: float = 0.95
+    stability_score_thresh: float = 0.92
     stability_score_offset: float = 1.0
     box_nms_thresh: float = 0.7
     crop_n_layers: int = 0
@@ -56,8 +56,10 @@ class Annotator:
             **dataclasses.asdict(settings)
         )
         masks = generator.generate(self.image)
-        self.mask = np.stack(masks, axis=0)
-        return
+        masks = [m["segmentation"] for m in masks]
+        masks = np.stack(masks, axis=0)
+        self.parent.annotator.mask = (masks * 255).astype(np.uint8)
+        self.cmap = get_cmap(len(self.parent.annotator.mask))
 
     # TODO: add box support
     def make_prediction(self, annotation: dict):
