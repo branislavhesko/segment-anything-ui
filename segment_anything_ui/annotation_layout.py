@@ -35,6 +35,7 @@ class AnnotationLayout(QWidget):
         self.add_point = QPushButton("Add Point")
         self.add_box = QPushButton("Add Box")
         self.annotate_all = QPushButton("Annotate All")
+        self.manual_polygon = QPushButton("Manual Polygon")
         self.cancel_annotation = QPushButton("Cancel Annotation")
         self.save_annotation = QPushButton("Save Annotation")
         self.save_annotation.setShortcut("N")
@@ -50,6 +51,9 @@ class AnnotationLayout(QWidget):
         self.annotate_all.clicked.connect(self.on_annotate_all)
         self.cancel_annotation.clicked.connect(self.on_cancel_annotation)
         self.save_annotation.clicked.connect(self.on_save_annotation)
+
+    def on_manual_polygon(self):
+        self.parent().image_label.change_paint_type(PaintType.POINT)
 
     def on_add_point(self):
         self.parent().image_label.change_paint_type(PaintType.POINT)

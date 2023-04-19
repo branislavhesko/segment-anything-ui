@@ -55,8 +55,9 @@ class Annotator:
             model=self.sam,
             **dataclasses.asdict(settings)
         )
-        output = generator.generate(self.image)
-        return output
+        masks = generator.generate(self.image)
+        self.mask = np.stack(masks, axis=0)
+        return
 
     # TODO: add box support
     def make_prediction(self, annotation: dict):

@@ -14,6 +14,7 @@ class PaintType(Enum):
     POINT = 0
     BOX = 1
     MASK = 2
+    POLYGON = 3
 
 
 @dataclasses.dataclass
@@ -27,6 +28,14 @@ class BoundingBox:
         return np.array([self.xstart, self.ystart, self.xend, self.yend])
 
 
+@dataclasses.dataclass
+class Polygon:
+    points: list
+
+    def to_numpy(self):
+        return np.array(self.points).reshape(-1, 2)
+
+
 class DrawLabel(QtWidgets.QLabel):
 
     def __init__(self, parent=None):
@@ -36,6 +45,7 @@ class DrawLabel(QtWidgets.QLabel):
         self.bounding_box = None
         self.partial_box = BoundingBox(0, 0)
         self._paint_type = PaintType.POINT
+        self.polygon = []
 
     def paintEvent(self, paint_event):
         painter = QPainter(self)
@@ -69,6 +79,10 @@ class DrawLabel(QtWidgets.QLabel):
         painter.setRenderHint(QPainter.Antialiasing, False)
         for pos in self.negative_points:
             painter.drawPoint(pos)
+
+        painter.setPen(pen_box)
+        painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.drawPolygon(self.polygon)
         # self.update()
 
     def _get_pen(self, color=QtCore.Qt.red, width=5):
@@ -108,6 +122,10 @@ class DrawLabel(QtWidgets.QLabel):
     def mousePressEvent(self, ev: PySide6.QtGui.QMouseEvent) -> None:
         if self._paint_type == PaintType.BOX and ev.button() == QtCore.Qt.LeftButton:
             self.bounding_box = BoundingBox(xstart=ev.pos().x(), ystart=ev.pos().y())
+
+        if self._paint_type == PaintType.POLYGON and ev.button() == QtCore.Qt.LeftButton:
+            self.polygon.append([ev.pos().x(), ev.pos().y()])
+            self.update()
 
     def get_annotations(self):
         positive_points = [(p.x(), p.y()) for p in self.positive_points]
