@@ -1,1 +1,6 @@
 pyside6
+opencv-python
+torch
+numpy
+segment-anything
+matplotlib

@@ -4,8 +4,7 @@ import numpy as np
 import torch
 from PySide6.QtWidgets import (QApplication, QGridLayout,
                                QMessageBox, QWidget)
-from segment_anything import (SamAutomaticMaskGenerator, SamPredictor,
-                              sam_model_registry)
+from segment_anything import sam_model_registry
 
 from segment_anything_ui.annotator import Annotator
 from segment_anything_ui.annotation_layout import AnnotationLayout
