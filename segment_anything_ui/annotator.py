@@ -16,12 +16,13 @@ def get_cmap(n, name='hsv'):
 @dataclasses.dataclass()
 class AutomaticMaskGenerator:
     points_per_side: int = 32
-    pred_iou_thresh: float = 0.88
-    stability_score_thresh: float = 0.92
+    pred_iou_thresh: float = 0.5
+    stability_score_thresh: float = 0.95
     stability_score_offset: float = 1.0
-    box_nms_thresh: float = 0.7
+    box_nms_thresh: float = 0.5
     crop_n_layers: int = 0
-    crop_nms_thresh: float = 0.7
+    crop_nms_thresh: float = 0.5
+
 
 
 

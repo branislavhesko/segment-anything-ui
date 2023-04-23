@@ -1,4 +1,7 @@
+import random
+
 import cv2
+import numpy as np
 from PySide6.QtWidgets import QPushButton, QWidget, QFileDialog, QVBoxLayout, QLineEdit, QLabel
 
 
@@ -50,7 +53,14 @@ class SettingsLayout(QWidget):
     def on_next_file(self):
         file = self.files.get_next()
         image = cv2.imread(file, cv2.IMREAD_UNCHANGED)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        if len(image.shape) == 2:
+            image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+        else:
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+        if image.dtype in [np.float32, np.float64, np.uint16]:
+            image = (image / np.amax(image) * 255).astype("uint8")
+
         image = cv2.resize(image, (self.parent().config.window_size, self.parent().config.window_size))  # TODO: Remove this
         self.parent().set_image(image)
 
@@ -71,6 +81,7 @@ class SettingsLayout(QWidget):
         self.parent().sam = self.parent().init_sam()
 
     def on_open_files(self):
-        files, _ = QFileDialog.getOpenFileNames(self, "Open Files", "", "Image Files (*.png *.jpg *.bmp)")
+        files, _ = QFileDialog.getOpenFileNames(self, "Open Files", "", "Image Files (*.png *.jpg *.bmp *.tif *.tiff)")
+        random.shuffle(files)
         self.files.add_files(files)
         self.on_next_file()
