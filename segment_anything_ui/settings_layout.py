@@ -62,6 +62,7 @@ class SettingsLayout(QWidget):
             image = (image / np.amax(image) * 255).astype("uint8")
 
         image = cv2.resize(image, (self.parent().config.window_size, self.parent().config.window_size))  # TODO: Remove this
+        self.parent().annotator.clear()
         self.parent().set_image(image)
 
     def on_show_image(self):

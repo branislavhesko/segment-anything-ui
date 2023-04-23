@@ -1,30 +1,10 @@
+from typing import Callable
 import numpy as np
-from PySide6.QtWidgets import QWidget, QLabel, QSpinBox, QDoubleSpinBox, QVBoxLayout, QPushButton
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QPushButton
 
 from segment_anything_ui.draw_label import PaintType
-from segment_anything_ui.annotator import AutomaticMaskGenerator
-
-
-class AnnotationLayoutSettings(QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.layout = QVBoxLayout(self)
-        self.num_points_label = QLabel("Number of Points:")
-        self.num_points_input = QSpinBox()
-        self.num_points_input.setMinimum(1)
-        self.num_points_input.setMaximum(1000)
-        self.num_points_input.setValue(10)
-
-        # Create the IOU threshold label and input field
-        self.iou_threshold_label = QLabel("IOU Threshold:")
-        self.iou_threshold_input = QDoubleSpinBox()
-        self.iou_threshold_input.setMinimum(0.0)
-        self.iou_threshold_input.setMaximum(1.0)
-        self.iou_threshold_input.setValue(0.5)
-        self.layout.addWidget(self.num_points_label)
-        self.layout.addWidget(self.num_points_input)
-        self.layout.addWidget(self.iou_threshold_label)
-        self.layout.addWidget(self.iou_threshold_input)
+from segment_anything_ui.annotator import AutomaticMaskGeneratorSettings, CustomForm
 
 
 class AnnotationLayout(QWidget):
@@ -32,6 +12,7 @@ class AnnotationLayout(QWidget):
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.layout = QVBoxLayout(self)
+        self.layout.setAlignment(Qt.AlignTop)
         self.add_point = QPushButton("Add Point")
         self.add_box = QPushButton("Add Box")
         self.annotate_all = QPushButton("Annotate All")
@@ -40,7 +21,7 @@ class AnnotationLayout(QWidget):
         self.save_annotation = QPushButton("Save Annotation")
         self.pick_mask = QPushButton("Pick Mask")
         self.save_annotation.setShortcut("N")
-        self.annotation_settings = AnnotationLayoutSettings(self)
+        self.annotation_settings = CustomForm(self, AutomaticMaskGeneratorSettings())
         self.layout.addWidget(self.add_point)
         self.layout.addWidget(self.add_box)
         self.layout.addWidget(self.annotate_all)
@@ -70,7 +51,7 @@ class AnnotationLayout(QWidget):
         self.parent().image_label.change_paint_type(PaintType.BOX)
 
     def on_annotate_all(self):
-        self.parent().annotator.predict_all(AutomaticMaskGenerator())
+        self.parent().annotator.predict_all(self.annotation_settings.get_values())
         self.parent().update(self.parent().annotator.merge_image_visualization())
 
     def on_cancel_annotation(self):

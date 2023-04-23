@@ -1,8 +1,10 @@
 import dataclasses
+from typing import Callable
+
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit
 from segment_anything import SamPredictor, automatic_mask_generator
 import torch
 
@@ -14,16 +16,44 @@ def get_cmap(n, name='hsv'):
 
 
 @dataclasses.dataclass()
-class AutomaticMaskGenerator:
+class AutomaticMaskGeneratorSettings:
     points_per_side: int = 32
-    pred_iou_thresh: float = 0.5
+    pred_iou_thresh: float = 0.88
     stability_score_thresh: float = 0.95
     stability_score_offset: float = 1.0
-    box_nms_thresh: float = 0.5
+    box_nms_thresh: float = 0.7
     crop_n_layers: int = 0
-    crop_nms_thresh: float = 0.5
+    crop_nms_thresh: float = 0.7
 
 
+class LabelValueParam(QWidget):
+    def __init__(self, label_text, default_value, value_type_converter: Callable = lambda x: x, parent=None):
+        super().__init__(parent)
+        self.layout = QVBoxLayout(self)
+        self.label = QLabel(self, text=label_text)
+        self.value = QLineEdit(self, text=default_value)
+        self.layout.addWidget(self.label)
+        self.layout.addWidget(self.value)
+        self.converter = value_type_converter
+
+    def get_value(self):
+        return self.converter(self.value.text())
+
+
+class CustomForm(QWidget):
+
+    def __init__(self, parent: QWidget, automatic_mask_generator_settings: AutomaticMaskGeneratorSettings) -> None:
+        super().__init__(parent)
+        self.layout = QVBoxLayout(self)
+        self.widgets = []
+
+        for field in dataclasses.fields(automatic_mask_generator_settings):
+            widget = LabelValueParam(field.name, str(field.default), field.type)
+            self.widgets.append(widget)
+            self.layout.addWidget(widget)
+
+    def get_values(self):
+        return AutomaticMaskGeneratorSettings(**{widget.label.text(): widget.get_value() for widget in self.widgets})
 
 
 @dataclasses.dataclass()
@@ -52,25 +82,17 @@ class Annotator:
         self.predictor = SamPredictor(self.sam)
         self.predictor.set_image(self.image)
 
-    def predict_all(self, settings: AutomaticMaskGenerator):
+    def predict_all(self, settings: AutomaticMaskGeneratorSettings):
         generator = automatic_mask_generator.SamAutomaticMaskGenerator(
             model=self.sam,
             **dataclasses.asdict(settings)
         )
         masks = generator.generate(self.image)
-        masks = [m["segmentation"] for m in masks]
-        masks = np.stack(masks, axis=0)
-        self.parent.annotator.mask = (masks * 255).astype(np.uint8)
+        masks = [(m["segmentation"] * 255).astype(np.uint8) for m in masks]
+        self.parent.annotator.mask = masks
         self.cmap = get_cmap(len(self.parent.annotator.mask))
 
-    # TODO: add box support
     def make_prediction(self, annotation: dict):
-        if self.predictor is None:
-            # TODO: testing code
-            mask = np.zeros_like(self.image)[..., 0]
-            mask[50:100, 50:100] = 255
-            self.last_mask = mask
-            return
         masks, scores, logits = self.predictor.predict(
             point_coords=annotation["points"],
             point_labels=annotation["labels"],

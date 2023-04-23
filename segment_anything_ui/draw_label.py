@@ -37,6 +37,24 @@ class Polygon:
         return np.array(self.points).reshape(-1, 2)
 
 
+
+class MaskIdPicker:
+
+    def __init__(self, length) -> None:
+        self.counter = 0
+        self.length = length
+
+    def increment(self):
+        self.counter = (self.counter + 1) % self.length
+
+    def pick(self, ids):
+        print("Length of ids: ", len(ids), " counter: ", self.counter, " ids: ", ids)
+        if len(ids) <= self.counter:
+            self.counter = 0
+        return_id = ids[self.counter]
+        self.increment()
+        return return_id
+
 class DrawLabel(QtWidgets.QLabel):
 
     def __init__(self, parent=None):
@@ -47,6 +65,8 @@ class DrawLabel(QtWidgets.QLabel):
         self.partial_box = BoundingBox(0, 0)
         self._paint_type = PaintType.POINT
         self.polygon = Polygon()
+        self.mask_enum: MaskIdPicker = MaskIdPicker(3)
+
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
 
     def paintEvent(self, paint_event):
@@ -132,9 +152,15 @@ class DrawLabel(QtWidgets.QLabel):
         if self._paint_type == PaintType.MASK_PICKER and ev.button() == QtCore.Qt.LeftButton:
             print("Picking mask")
             point = [ev.pos().x(), ev.pos().y()]
-            argmax_mask = self.parent().annotator.make_instance_mask()
-            mask_id = argmax_mask[point[1], point[0]] - 1
-            local_mask = self.parent().annotator.mask[mask_id]
+            mask = np.array(self.parent().annotator.mask)
+            mask_ids = np.where(mask[:, point[1], point[0]])[0]
+            if not(len(mask_ids) > 0):
+                print("No mask found")
+                mask_id = -1
+                local_mask = np.zeros((mask.shape[1], mask.shape[2]))
+            else:
+                mask_id = self.mask_enum.pick(mask_ids)
+                local_mask = self.parent().annotator.mask[mask_id]
             self.parent().annotator.mask_id = mask_id
             self.parent().annotator.last_mask = local_mask
             self.parent().annotator.visualize_last_mask()
