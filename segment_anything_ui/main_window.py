@@ -27,7 +27,7 @@ class SegmentAnythingUI(QWidget):
         self.settings = SettingsLayout(self)
         self.sam = self.init_sam()
         self.annotator = Annotator(sam=self.sam, parent=self)
-        self.annotation_layout = AnnotationLayout(self)
+        self.annotation_layout = AnnotationLayout(self, config=self.config)
         self.layout.addWidget(self.annotation_layout, 0, 0)
         self.layout.addWidget(self.image_label, 0, 1)
         self.layout.addWidget(self.settings, 0, 2)

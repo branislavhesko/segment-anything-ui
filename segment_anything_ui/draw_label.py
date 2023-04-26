@@ -136,7 +136,7 @@ class DrawLabel(QtWidgets.QLabel):
             if cursor_event.button() == QtCore.Qt.LeftButton:
                 self.bounding_box.xend = cursor_event.pos().x()
                 self.bounding_box.yend = cursor_event.pos().y()
-                self.partial_box = BoundingBox(0, 0, 0, 0)
+                self.partial_box = BoundingBox(-1, -1, -1, -1)
         if not self._paint_type == PaintType.MASK_PICKER:
             self.parent().annotator.make_prediction(self.get_annotations())
             self.parent().annotator.visualize_last_mask()

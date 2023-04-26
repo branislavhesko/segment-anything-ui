@@ -102,6 +102,9 @@ class Annotator:
         mask = masks[0]
         self.last_mask = mask * 255
 
+    def move_current_mask_to_background(self):
+        self.mask[self.mask_id] = self.mask[self.mask_id] / 2
+
     def visualize_last_mask(self):
         last_mask = np.zeros_like(self.image)
         last_mask[:, :, 1] = self.last_mask
