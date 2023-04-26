@@ -1,4 +1,7 @@
-# segment-anything-ui
+# Segment Anything UI
+Simple UI for the model: [Segment anything](https://github.com/facebookresearch/segment-anything) from Facebook.
+
+
 Segment anything UI for annotations
 ![GUI](./assets/parrots.png)
 
