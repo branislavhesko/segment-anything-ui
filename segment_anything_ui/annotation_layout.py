@@ -6,7 +6,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel, QLineEdit, QListWidget
 
 from segment_anything_ui.draw_label import PaintType
-from segment_anything_ui.annotator import AutomaticMaskGeneratorSettings, CustomForm
+from segment_anything_ui.annotator import AutomaticMaskGeneratorSettings, CustomForm, MasksAnnotation
 
 
 class AnnotationLayout(QWidget):
@@ -65,6 +65,7 @@ class AnnotationLayout(QWidget):
             return ["default"]
         with open(config.label_file, "r") as f:
             labels = json.load(f)
+        MasksAnnotation.DEFAULT_LABEL = list(labels.keys())[0] if len(labels) > 0 else "default"
         return labels
 
     def on_move_current_mask_background_fn(self):
@@ -72,19 +73,22 @@ class AnnotationLayout(QWidget):
         self.parent().update(self.parent().annotator.merge_image_visualization())
 
     def on_remove_hidden_masks(self):
-        masks = self.parent().annotator.mask
+        annotations = self.parent().annotator.masks
         argmax_mask = self.parent().annotator.make_instance_mask()
         limit_ratio = float(self.remove_hidden_masks_line.text())
-        new_mask = []
-        for idx, mask in enumerate(masks):
+        new_masks = []
+        new_labels = []
+        for idx, (mask, label) in enumerate(annotations):
             num_pixels = np.sum(mask > 0)
             num_visible = np.sum(argmax_mask == (idx + 1))
             ratio = num_visible / num_pixels
 
             if ratio > limit_ratio:
-                new_mask.append(mask)
-        print("Removed ", len(masks) - len(new_mask), " masks.")
-        self.parent().annotator.mask = new_mask
+                new_masks.append(mask)
+                new_labels.append(label)
+
+        print("Removed ", len(annotations) - len(new_masks), " masks.")
+        self.parent().annotator.masks = MasksAnnotation.from_masks(new_masks, new_labels)
         self.parent().update(self.parent().annotator.merge_image_visualization())
 
     def on_pick_mask(self):

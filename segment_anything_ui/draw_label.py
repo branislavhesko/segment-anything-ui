@@ -152,26 +152,26 @@ class DrawLabel(QtWidgets.QLabel):
         if self._paint_type == PaintType.MASK_PICKER and ev.button() == QtCore.Qt.LeftButton:
             print("Picking mask")
             point = [ev.pos().x(), ev.pos().y()]
-            mask = np.array(self.parent().annotator.mask)
-            mask_ids = np.where(mask[:, point[1], point[0]])[0]
+            masks = np.array(self.parent().annotator.masks.masks)
+            mask_ids = np.where(masks[:, point[1], point[0]])[0]
             if not(len(mask_ids) > 0):
                 print("No mask found")
                 mask_id = -1
-                local_mask = np.zeros((mask.shape[1], mask.shape[2]))
+                local_mask = np.zeros((masks.shape[1], masks.shape[2]))
             else:
                 mask_id = self.mask_enum.pick(mask_ids)
-                local_mask = self.parent().annotator.mask[mask_id]
-            self.parent().annotator.mask_id = mask_id
+                local_mask = self.parent().annotator.masks[mask_id]
+            self.parent().annotator.masks.mask_id = mask_id
             self.parent().annotator.last_mask = local_mask
             self.parent().annotator.visualize_last_mask()
         self.update()
 
     def keyPressEvent(self, ev: PySide6.QtGui.QKeyEvent) -> None:
         print(ev.key())
-        if self._paint_type == PaintType.MASK_PICKER and ev.key() == QtCore.Qt.Key.Key_D and len(self.parent().annotator.mask):
+        if self._paint_type == PaintType.MASK_PICKER and ev.key() == QtCore.Qt.Key.Key_D and len(self.parent().annotator.masks):
             print("Deleting mask")
-            self.parent().annotator.mask.pop(self.parent().annotator.mask_id)
-            self.parent().annotator.mask_id = -1
+            self.parent().annotator.masks.pop(self.parent().annotator.masks.mask_id)
+            self.parent().annotator.masks.mask_id = -1
             self.parent().annotator.last_mask = None
             self.parent().update(self.parent().annotator.merge_image_visualization())
 

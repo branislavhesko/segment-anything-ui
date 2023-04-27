@@ -56,17 +56,69 @@ class CustomForm(QWidget):
         return AutomaticMaskGeneratorSettings(**{widget.label.text(): widget.get_value() for widget in self.widgets})
 
 
+class MasksAnnotation:
+    DEFAULT_LABEL = "default"
+
+    def __init__(self) -> None:
+        self.masks = []
+        self.label_map = {}
+        self.mask_id: int = -1
+
+    def add_mask(self, mask, label: str | None = None):
+        self.masks.append(mask)
+        self.label_map[len(self.masks) - 1] = self.DEFAULT_LABEL if label is None else label
+
+    def add_label(self, mask_id: int, label: str):
+        self.label_map[mask_id] = label
+
+    def get_mask(self, mask_id: int):
+        return self.masks[mask_id]
+
+    def __getitem__(self, mask_id: int):
+        return self.get_mask(mask_id)
+
+    def __setitem__(self, mask_id: int, value):
+        self.masks[mask_id] = value
+
+    def __len__(self):
+        return len(self.masks)
+
+    def __iter__(self):
+        return iter(zip(self.masks, self.label_map.values()))
+
+    def __next__(self):
+        if self.mask_id >= len(self.masks):
+            raise StopIteration
+        return self.masks[self.mask_id]
+
+    def append(self, mask, label: str | None = None):
+        self.add_mask(mask, label)
+
+    def pop(self, mask_id: int = -1):
+        mask = self.masks.pop(mask_id)
+        self.label_map.pop(mask_id)
+        return mask
+
+    @classmethod
+    def from_masks(cls, masks, labels: list[str] | None = None):
+        annotation = cls()
+        if labels is None:
+            labels = [None] * len(masks)
+        for mask, label in zip(masks, labels):
+            annotation.append(mask, label)
+        return annotation
+
+
 @dataclasses.dataclass()
 class Annotator:
     sam: torch.nn.Module | None = None
     embedding: torch.Tensor | None = None
     image: np.ndarray | None = None
-    mask: list[np.ndarray] = dataclasses.field(default_factory=list)
+    masks: MasksAnnotation = dataclasses.field(default_factory=MasksAnnotation)
     predictor: SamPredictor | None = None
     visualization: np.ndarray | None = None
     last_mask: np.ndarray | None = None
     parent: QWidget | None = None
-    mask_id: int = -1
 
     def __post_init__(self):
         self.MAX_MASKS = 10
@@ -89,8 +141,8 @@ class Annotator:
         )
         masks = generator.generate(self.image)
         masks = [(m["segmentation"] * 255).astype(np.uint8) for m in masks]
-        self.parent.annotator.mask = masks
-        self.cmap = get_cmap(len(self.parent.annotator.mask))
+        self.masks = MasksAnnotation.from_masks(masks)
+        self.cmap = get_cmap(len(self.parent.annotator.masks))
 
     def make_prediction(self, annotation: dict):
         masks, scores, logits = self.predictor.predict(
@@ -103,7 +155,7 @@ class Annotator:
         self.last_mask = mask * 255
 
     def move_current_mask_to_background(self):
-        self.mask[self.mask_id] = self.mask[self.mask_id] / 2
+        self.masks[self.masks.self.mask_id] = self.masks[self.masks.self.masks_id] / 2
 
     def visualize_last_mask(self):
         last_mask = np.zeros_like(self.image)
@@ -119,25 +171,25 @@ class Annotator:
         return visualization
 
     def make_instance_mask(self):
-        background = np.zeros_like(self.mask[0]) + 1
-        mask_argmax = np.argmax(np.concatenate([np.expand_dims(background, 0), np.array(self.mask)], axis=0), axis=0).astype(np.uint8)
+        background = np.zeros_like(self.masks[0]) + 1
+        mask_argmax = np.argmax(np.concatenate([np.expand_dims(background, 0), np.array(self.masks.masks)], axis=0), axis=0).astype(np.uint8)
         return mask_argmax
 
     def merge_image_visualization(self):
-        if not len(self.mask):
+        if not len(self.masks):
             return self.image
         self.visualization = cv2.addWeighted(self.image, 0.5, self.visualize_mask(), 0.5, 0)
         return self.visualization
 
     def remove_last_mask(self):
-        self.mask.pop()
+        self.masks.pop()
 
     def save_mask(self):
-        self.mask.append(self.last_mask)
-        if len(self.mask) >= self.MAX_MASKS:
+        self.masks.append(self.last_mask)
+        if len(self.masks) >= self.MAX_MASKS:
             self.MAX_MASKS += 10
             self.cmap = get_cmap(self.MAX_MASKS)
 
     def clear(self):
         self.last_mask = None
-        self.mask = []
+        self.masks = MasksAnnotation()
