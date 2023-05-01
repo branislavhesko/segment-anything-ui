@@ -167,7 +167,12 @@ class Annotator:
         visualization = np.zeros_like(self.image)
         for i in range(1, np.amax(mask_argmax) + 1):
             color = self.cmap(i)
+            single_mask = np.zeros_like(mask_argmax)
+            single_mask[mask_argmax == i] = 1
             visualization[mask_argmax == i, :] = np.array(color[:3]) * 255
+            border = single_mask - cv2.erode(
+                single_mask, np.ones((5, 5), np.uint8), iterations=1)
+            visualization[border > 0, :] = [255, 255, 255]
         return visualization
 
     def make_instance_mask(self):
@@ -184,8 +189,11 @@ class Annotator:
     def remove_last_mask(self):
         self.masks.pop()
 
-    def save_mask(self):
-        self.masks.append(self.last_mask)
+    def make_labels(self):
+        return self.masks.label_map
+
+    def save_mask(self, label: str = MasksAnnotation.DEFAULT_LABEL):
+        self.masks.append(self.last_mask, label=label)
         if len(self.masks) >= self.MAX_MASKS:
             self.MAX_MASKS += 10
             self.cmap = get_cmap(self.MAX_MASKS)

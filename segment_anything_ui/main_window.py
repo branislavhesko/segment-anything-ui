@@ -2,7 +2,7 @@ import sys
 
 import numpy as np
 import torch
-from PySide6.QtWidgets import (QApplication, QGridLayout,
+from PySide6.QtWidgets import (QApplication, QGridLayout, QLabel,
                                QMessageBox, QWidget)
 from segment_anything import sam_model_registry
 
@@ -25,12 +25,15 @@ class SegmentAnythingUI(QWidget):
         self.layout = QGridLayout(self)
         self.image_label = DrawLabel(self)
         self.settings = SettingsLayout(self)
+        self.info_label = QLabel("Information about running process.")
         self.sam = self.init_sam()
         self.annotator = Annotator(sam=self.sam, parent=self)
         self.annotation_layout = AnnotationLayout(self, config=self.config)
         self.layout.addWidget(self.annotation_layout, 0, 0)
         self.layout.addWidget(self.image_label, 0, 1)
         self.layout.addWidget(self.settings, 0, 2)
+        self.layout.addWidget(self.info_label, 1, 1)
+
         self.set_image(np.zeros((self.config.window_size, self.config.window_size, 3), dtype=np.uint8))
         self.show()
 
@@ -57,6 +60,9 @@ class SegmentAnythingUI(QWidget):
 
     def get_mask(self):
         return self.annotator.make_instance_mask()
+
+    def get_labels(self):
+        return self.annotator.make_labels()
 
 
 

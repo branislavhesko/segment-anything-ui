@@ -16,12 +16,15 @@ Segment anything UI for annotations
  5. ```export PYTHONPATH=$PYTHONPATH:.```.
  6. ```python segment_anything_ui/main_window.py```.
 
+Currently, for saving a simple format is used: mask is saved as .png file, when masks are represented by values: 1 ... n and corresponding labels are saved as jsons. In json, labels are a map with mapping: MASK_ID: LABEL. MASK_ID is the id of the stored mask and LABEL is one of "labels.json" files.
+
 
 # TODO:
 
+ - [ ] - FIX: mouse picker for small objects is not precise.
  - [ ] - Region merging.
  - [ ] - Manual annotation + brush + deleting options.
  - [ ] - Shortcut description.
- - [ ] - Saving and loading of masks.
- - [ ] - Class support for assigning classes to objects.
- - [ ] - Add object borders.
+ - [x] - Saving and loading of masks.
+ - [x] - Class support for assigning classes to objects.
+ - [x] - Add object borders.

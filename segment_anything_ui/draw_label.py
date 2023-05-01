@@ -80,7 +80,7 @@ class DrawLabel(QtWidgets.QLabel):
 
         painter.setPen(pen_box)
 
-        if self.bounding_box is not None:
+        if self.bounding_box is not None and self.bounding_box.xend != -1 and self.bounding_box.yend != -1:
             painter.drawRect(
                 self.bounding_box.xstart,
                 self.bounding_box.ystart,

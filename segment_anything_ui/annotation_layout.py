@@ -23,6 +23,7 @@ class AnnotationLayout(QWidget):
         self.cancel_annotation = QPushButton("Cancel Annotation")
         self.save_annotation = QPushButton("Save Annotation")
         self.pick_mask = QPushButton("Pick Mask")
+        self.merge_masks = QPushButton("Merge Masks")
         self.label_picker = QListWidget()
         self.label_picker.addItems(labels)
         self.label_picker.setCurrentRow(0)
@@ -31,6 +32,11 @@ class AnnotationLayout(QWidget):
         self.remove_hidden_masks_label = QLabel("Remove Hidden Masks with hidden area less than")
         self.remove_hidden_masks_line = QLineEdit("0.5")
         self.save_annotation.setShortcut("N")
+        self.add_point.setShortcut("A")
+        self.add_box.setShortcut("Q")
+        self.annotate_all.setShortcut(Qt.Key_Return)
+        self.cancel_annotation.setShortcut("C")
+        self.pick_mask.setShortcut("X")
 
         self.annotation_settings = CustomForm(self, AutomaticMaskGeneratorSettings())
         for w in [
@@ -38,6 +44,7 @@ class AnnotationLayout(QWidget):
                 self.add_box,
                 self.annotate_all,
                 self.pick_mask,
+                self.merge_masks,
                 self.move_current_mask_background,
                 self.cancel_annotation,
                 self.save_annotation,
@@ -68,11 +75,16 @@ class AnnotationLayout(QWidget):
         MasksAnnotation.DEFAULT_LABEL = list(labels.keys())[0] if len(labels) > 0 else "default"
         return labels
 
+    def on_merge_masks(self):
+        pass
+
     def on_move_current_mask_background_fn(self):
+        self.parent().info_label.setText("Moving current mask to background!")
         self.parent().annotator.move_current_mask_to_background()
         self.parent().update(self.parent().annotator.merge_image_visualization())
 
     def on_remove_hidden_masks(self):
+        self.parent().info_label.setText("Removing hidden masks!")
         annotations = self.parent().annotator.masks
         argmax_mask = self.parent().annotator.make_instance_mask()
         limit_ratio = float(self.remove_hidden_masks_line.text())
@@ -92,6 +104,7 @@ class AnnotationLayout(QWidget):
         self.parent().update(self.parent().annotator.merge_image_visualization())
 
     def on_pick_mask(self):
+        self.parent().info_label.setText("Pick a mask to do modifications!")
         self.parent().image_label.change_paint_type(PaintType.MASK_PICKER)
 
     def on_manual_polygon(self):
@@ -100,20 +113,24 @@ class AnnotationLayout(QWidget):
         self.parent().image_label.change_paint_type(PaintType.POLYGON)
 
     def on_add_point(self):
+        self.parent().info_label.setText("Adding point annotation!")
         self.parent().image_label.change_paint_type(PaintType.POINT)
 
     def on_add_box(self):
+        self.parent().info_label.setText("Adding box annotation!")
         self.parent().image_label.change_paint_type(PaintType.BOX)
 
     def on_annotate_all(self):
+        self.parent().info_label.setText("Annotating all. This make take some time.")
         self.parent().annotator.predict_all(self.annotation_settings.get_values())
         self.parent().update(self.parent().annotator.merge_image_visualization())
+        self.parent().info_label.setText("Annotate all finished.")
 
     def on_cancel_annotation(self):
         self.parent().image_label.clear()
         self.parent().update(self.parent().annotator.merge_image_visualization())
 
     def on_save_annotation(self):
-        self.parent().annotator.save_mask()
+        self.parent().annotator.save_mask(label=self.label_picker.currentItem().text())
         self.parent().update(self.parent().annotator.merge_image_visualization())
         self.parent().image_label.clear()

@@ -1,3 +1,5 @@
+import json
+import os
 import random
 
 import cv2
@@ -23,6 +25,7 @@ class FilesHolder:
 class SettingsLayout(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.actual_file: str = ""
         self.layout = QVBoxLayout(self)
         self.open_files = QPushButton("Open Files")
         self.open_files.clicked.connect(self.on_open_files)
@@ -53,6 +56,7 @@ class SettingsLayout(QWidget):
     def on_next_file(self):
         file = self.files.get_next()
         image = cv2.imread(file, cv2.IMREAD_UNCHANGED)
+        self.actual_file = file
         if len(image.shape) == 2:
             image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
         else:
@@ -75,8 +79,15 @@ class SettingsLayout(QWidget):
         pass
 
     def on_save_mask(self):
-        mask = self.parent().get_mask()
-        cv2.imwrite("mask.png", mask.astype("uint8"))
+        path = os.path.split(self.actual_file)[0]
+        basename = os.path.splitext(os.path.basename(self.actual_file))[0]
+        mask_path = os.path.join(path, basename + "_mask.png")
+        labels_path = os.path.join(path, basename + "_labels.json")
+        masks = self.parent().get_mask()
+        labels = self.parent().get_labels()
+        with open(labels_path, "w") as f:
+            json.dump(labels, f, indent=4)
+        cv2.imwrite(mask_path, masks)
 
     def on_checkpoint_path_changed(self):
         self.parent().sam = self.parent().init_sam()
