@@ -178,15 +178,16 @@ class Annotator:
     def visualize_mask(self):
         mask_argmax = self.make_instance_mask()
         visualization = np.zeros_like(self.image)
+        border = np.zeros(self.image.shape[:2], dtype=np.uint8)
         for i in range(1, np.amax(mask_argmax) + 1):
             color = self.cmap(i)
             single_mask = np.zeros_like(mask_argmax)
             single_mask[mask_argmax == i] = 1
             visualization[mask_argmax == i, :] = np.array(color[:3]) * 255
-            border = single_mask - cv2.erode(
+            border += single_mask - cv2.erode(
                 single_mask, np.ones((5, 5), np.uint8), iterations=1)
-            visualization[border > 0, :] = [255, 255, 255]
-        return visualization
+        border = (border == 0).astype(np.uint8)
+        return visualization, border
 
     def make_instance_mask(self):
         background = np.zeros_like(self.masks[0]) + 1
@@ -196,7 +197,8 @@ class Annotator:
     def merge_image_visualization(self):
         if not len(self.masks):
             return self.image
-        self.visualization = cv2.addWeighted(self.image, 0.5, self.visualize_mask(), 0.5, 0)
+        visualization, border = self.visualize_mask()
+        self.visualization = cv2.addWeighted(self.image, 0.5, visualization, 0.5, 0) * border[:, :, np.newaxis]
         return self.visualization
 
     def remove_last_mask(self):
