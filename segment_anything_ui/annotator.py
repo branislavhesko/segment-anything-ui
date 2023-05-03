@@ -74,6 +74,12 @@ class MasksAnnotation:
     def get_mask(self, mask_id: int):
         return self.masks[mask_id]
 
+    def get_current_mask(self):
+        return self.masks[self.mask_id]
+
+    def set_current_mask(self, mask):
+        self.masks[self.mask_id] = mask
+
     def __getitem__(self, mask_id: int):
         return self.get_mask(mask_id)
 
@@ -118,6 +124,7 @@ class Annotator:
     predictor: SamPredictor | None = None
     visualization: np.ndarray | None = None
     last_mask: np.ndarray | None = None
+    merged_mask: np.ndarray | None = None
     parent: QWidget | None = None
 
     def __post_init__(self):
@@ -155,11 +162,17 @@ class Annotator:
         self.last_mask = mask * 255
 
     def move_current_mask_to_background(self):
-        self.masks[self.masks.self.mask_id] = self.masks[self.masks.self.masks_id] / 2
+        self.masks.set_current_mask(self.masks.get_current_mask() * 0.5)
+
+    def merge_masks(self):
+        new_mask = np.bitwise_or(self.last_mask, self.merged_mask)
+        self.masks.append(new_mask, MasksAnnotation.DEFAULT_LABEL)
 
     def visualize_last_mask(self):
         last_mask = np.zeros_like(self.image)
         last_mask[:, :, 1] = self.last_mask
+        if self.merged_mask is not None:
+            last_mask[:, :, 2] = self.merged_mask
         self.parent.update(cv2.addWeighted(self.image.copy() if self.visualization is None else self.visualization.copy(), 0.5, last_mask, 0.5, 0))
 
     def visualize_mask(self):
