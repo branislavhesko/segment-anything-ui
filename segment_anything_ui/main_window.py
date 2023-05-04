@@ -65,7 +65,6 @@ class SegmentAnythingUI(QWidget):
         return self.annotator.make_labels()
 
 
-
 if __name__ == '__main__':
 
     app = QApplication(sys.argv)

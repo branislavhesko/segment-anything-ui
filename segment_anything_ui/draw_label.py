@@ -37,7 +37,6 @@ class Polygon:
         return np.array(self.points).reshape(-1, 2)
 
 
-
 class MaskIdPicker:
 
     def __init__(self, length) -> None:
@@ -54,6 +53,7 @@ class MaskIdPicker:
         return_id = ids[self.counter]
         self.increment()
         return return_id
+
 
 class DrawLabel(QtWidgets.QLabel):
 
@@ -150,10 +150,10 @@ class DrawLabel(QtWidgets.QLabel):
             self.polygon.points.append([ev.pos().x(), ev.pos().y()])
 
         if self._paint_type == PaintType.MASK_PICKER and ev.button() == QtCore.Qt.LeftButton:
-            print("Picking mask")
             point = [ev.pos().x(), ev.pos().y()]
             masks = np.array(self.parent().annotator.masks.masks)
             mask_ids = np.where(masks[:, point[1], point[0]])[0]
+            print("Picking mask at point: {}".format(point))
             if not(len(mask_ids) > 0):
                 print("No mask found")
                 mask_id = -1

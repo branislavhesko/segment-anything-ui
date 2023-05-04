@@ -3,8 +3,8 @@ import dataclasses
 
 @dataclasses.dataclass
 class Config:
-    window_size: int = 1024
-    default_weights = "sam_vit_h_4b8939.pth"
+    window_size: int = 1088
+    default_weights = "sam_vit_b_01ec64.pth"
     label_file = "labels.json"
 
     def get_model_name(self):

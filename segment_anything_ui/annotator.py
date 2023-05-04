@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit
 from segment_anything import SamPredictor, automatic_mask_generator
+from segment_anything.build_sam import Sam
 import torch
 
 
@@ -117,7 +118,7 @@ class MasksAnnotation:
 
 @dataclasses.dataclass()
 class Annotator:
-    sam: torch.nn.Module | None = None
+    sam: Sam | None = None
     embedding: torch.Tensor | None = None
     image: np.ndarray | None = None
     masks: MasksAnnotation = dataclasses.field(default_factory=MasksAnnotation)
@@ -166,7 +167,8 @@ class Annotator:
 
     def merge_masks(self):
         new_mask = np.bitwise_or(self.last_mask, self.merged_mask)
-        self.masks.append(new_mask, MasksAnnotation.DEFAULT_LABEL)
+        self.masks.append(new_mask, self.parent.annotation_layout.label_picker.currentItem().text())
+        self.merged_mask = None
 
     def visualize_last_mask(self):
         last_mask = np.zeros_like(self.image)
@@ -198,7 +200,7 @@ class Annotator:
         if not len(self.masks):
             return self.image
         visualization, border = self.visualize_mask()
-        self.visualization = cv2.addWeighted(self.image, 0.5, visualization, 0.5, 0) * border[:, :, np.newaxis]
+        self.visualization = cv2.addWeighted(self.image, 0.5, visualization, 0.9, 0) * border[:, :, np.newaxis]
         return self.visualization
 
     def remove_last_mask(self):

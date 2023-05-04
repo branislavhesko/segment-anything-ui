@@ -28,3 +28,4 @@ Currently, for saving a simple format is used: mask is saved as .png file, when 
  - [x] - Saving and loading of masks.
  - [x] - Class support for assigning classes to objects.
  - [x] - Add object borders.
+ - [ ] - Fix mask size and QLabel size for precise mouse clicks.

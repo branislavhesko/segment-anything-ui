@@ -1,6 +1,6 @@
+import enum
 import json
 import os
-from typing import Callable
 import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel, QLineEdit, QListWidget
@@ -9,10 +9,16 @@ from segment_anything_ui.draw_label import PaintType
 from segment_anything_ui.annotator import AutomaticMaskGeneratorSettings, CustomForm, MasksAnnotation
 
 
+class MergeState(enum.Enum):
+    PICKING = enum.auto()
+    MERGING = enum.auto()
+
+
 class AnnotationLayout(QWidget):
 
     def __init__(self, parent, config) -> None:
         super().__init__(parent)
+        self.merge_state = MergeState.PICKING
         self.layout = QVBoxLayout(self)
         labels = self._load_labels(config)
         self.layout.setAlignment(Qt.AlignTop)
@@ -65,6 +71,7 @@ class AnnotationLayout(QWidget):
         self.manual_polygon.clicked.connect(self.on_manual_polygon)
         self.remove_hidden_masks.clicked.connect(self.on_remove_hidden_masks)
         self.move_current_mask_background.clicked.connect(self.on_move_current_mask_background_fn)
+        self.merge_masks.clicked.connect(self.on_merge_masks)
 
     @staticmethod
     def _load_labels(config):
@@ -76,7 +83,15 @@ class AnnotationLayout(QWidget):
         return labels
 
     def on_merge_masks(self):
-        pass
+        self.parent().image_label.change_paint_type(PaintType.MASK_PICKER)
+        if self.merge_state == MergeState.PICKING:
+            self.parent().info_label.setText("Pick a mask to merge with!")
+            self.merge_state = MergeState.MERGING
+            self.parent().annotator.merged_mask = self.parent().annotator.last_mask.copy()
+        elif self.merge_state == MergeState.MERGING:
+            self.parent().info_label.setText("Merging masks!")
+            self.parent().annotator.merge_masks()
+            self.merge_state = MergeState.PICKING
 
     def on_move_current_mask_background_fn(self):
         self.parent().info_label.setText("Moving current mask to background!")
