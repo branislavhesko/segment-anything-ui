@@ -2,10 +2,12 @@ import copy
 import dataclasses
 from enum import Enum
 
+import cv2
 import numpy as np
 import PySide6
 from PySide6 import QtCore, QtWidgets
-from PySide6.QtGui import QPainter, QPen
+from PySide6.QtGui import QPainter, QPen, QPolygon
+from PySide6.QtCore import QPoint
 
 from segment_anything_ui.image_pixmap import ImagePixmap
 
@@ -36,6 +38,18 @@ class Polygon:
     def to_numpy(self):
         return np.array(self.points).reshape(-1, 2)
 
+    def to_mask(self, num_rows, num_cols):
+        mask = np.zeros((num_rows, num_cols))
+        mask = cv2.fillPoly(mask, pts=[self.to_numpy(), ], color=255)
+        return mask
+
+    def is_plotable(self):
+        return len(self.points) > 3
+
+    def to_qpolygon(self):
+        return QPolygon([
+            QPoint(x, y) for x, y in self.points
+        ])
 
 class MaskIdPicker:
 
@@ -102,9 +116,10 @@ class DrawLabel(QtWidgets.QLabel):
         for pos in self.negative_points:
             painter.drawPoint(pos)
 
-        # painter.setPen(pen_box)
-        # painter.setRenderHint(QPainter.Antialiasing, True)
-        # painter.drawPolygon(self.polygon)
+        if self.polygon.is_plotable():
+            painter.setPen(pen_box)
+            painter.setRenderHint(QPainter.Antialiasing, True)
+            painter.drawPolygon(self.polygon.to_qpolygon())
         # self.update()
 
     def _get_pen(self, color=QtCore.Qt.red, width=5):
@@ -112,6 +127,10 @@ class DrawLabel(QtWidgets.QLabel):
         pen.setWidth(width)
         pen.setColor(color)
         return pen
+
+    @property
+    def paint_type(self):
+        return self._paint_type
 
     def change_paint_type(self, paint_type: PaintType):
         print(f"Changing paint type to {paint_type}")

@@ -18,6 +18,7 @@ class AnnotationLayout(QWidget):
 
     def __init__(self, parent, config) -> None:
         super().__init__(parent)
+        self.config = config
         self.merge_state = MergeState.PICKING
         self.layout = QVBoxLayout(self)
         labels = self._load_labels(config)
@@ -146,6 +147,9 @@ class AnnotationLayout(QWidget):
         self.parent().update(self.parent().annotator.merge_image_visualization())
 
     def on_save_annotation(self):
+        if self.parent().image_label.paint_type == PaintType.POLYGON:
+            self.parent().annotator.last_mask = self.parent().image_label.polygon.to_mask(
+                self.config.window_size, self.config.window_size)
         self.parent().annotator.save_mask(label=self.label_picker.currentItem().text())
         self.parent().update(self.parent().annotator.merge_image_visualization())
         self.parent().image_label.clear()
