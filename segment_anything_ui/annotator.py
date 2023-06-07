@@ -217,4 +217,5 @@ class Annotator:
 
     def clear(self):
         self.last_mask = None
+        self.visualization = None
         self.masks = MasksAnnotation()

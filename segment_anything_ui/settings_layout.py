@@ -32,7 +32,9 @@ class SettingsLayout(QWidget):
         self.next_file = QPushButton("Next File")
         self.save_mask = QPushButton("Save Mask")
         self.save_mask.clicked.connect(self.on_save_mask)
+        self.save_mask.setShortcut("Ctrl+S")
         self.next_file.clicked.connect(self.on_next_file)
+        self.next_file.setShortcut("F")
         self.checkpoint_path_label = QLabel(self, text="Checkpoint Path")
         self.checkpoint_path = QLineEdit(self, text=self.parent().config.default_weights)
         self.precompute_button = QPushButton("Precompute all embeddings")
@@ -67,7 +69,9 @@ class SettingsLayout(QWidget):
 
         image = cv2.resize(image, (self.parent().config.window_size, self.parent().config.window_size))  # TODO: Remove this
         self.parent().annotator.clear()
+        self.parent().image_label.clear()
         self.parent().set_image(image)
+        self.parent().update(image)
 
     def on_show_image(self):
         pass
