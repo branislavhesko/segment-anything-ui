@@ -177,12 +177,14 @@ class DrawLabel(QtWidgets.QLabel):
                 print("No mask found")
                 mask_id = -1
                 local_mask = np.zeros((masks.shape[1], masks.shape[2]))
+                label = None
             else:
                 mask_id = self.mask_enum.pick(mask_ids)
-                local_mask = self.parent().annotator.masks[mask_id]
+                local_mask = self.parent().annotator.masks.get_mask(mask_id)
+                label = self.parent().annotator.masks.get_label(mask_id + 1)
             self.parent().annotator.masks.mask_id = mask_id
             self.parent().annotator.last_mask = local_mask
-            self.parent().annotator.visualize_last_mask()
+            self.parent().annotator.visualize_last_mask(label)
         self.update()
 
     def keyPressEvent(self, ev: PySide6.QtGui.QKeyEvent) -> None:

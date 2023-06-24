@@ -4,6 +4,7 @@ import numpy as np
 import torch
 from PySide6.QtWidgets import (QApplication, QGridLayout, QLabel,
                                QMessageBox, QWidget)
+from PySide6.QtCore import Qt
 from segment_anything import sam_model_registry
 
 from segment_anything_ui.annotator import Annotator
@@ -21,6 +22,7 @@ class SegmentAnythingUI(QWidget):
         self.config: Config = config
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.setWindowTitle("Segment Anything UI")
+        self.setWindowState(Qt.WindowState.WindowMaximized)
         # self.setGeometry(100, 100, 800, 600)
         self.layout = QGridLayout(self)
         self.image_label = DrawLabel(self)

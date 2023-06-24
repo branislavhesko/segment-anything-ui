@@ -7,6 +7,7 @@ import numpy as np
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit
 from segment_anything import SamPredictor, automatic_mask_generator
 from segment_anything.build_sam import Sam
+from skimage.measure import regionprops
 import torch
 
 
@@ -67,7 +68,7 @@ class MasksAnnotation:
 
     def add_mask(self, mask, label: str | None = None):
         self.masks.append(mask)
-        self.label_map[len(self.masks) - 1] = self.DEFAULT_LABEL if label is None else label
+        self.label_map[len(self.masks)] = self.DEFAULT_LABEL if label is None else label
 
     def add_label(self, mask_id: int, label: str):
         self.label_map[mask_id] = label
@@ -75,11 +76,15 @@ class MasksAnnotation:
     def get_mask(self, mask_id: int):
         return self.masks[mask_id]
 
+    def get_label(self, mask_id: int):
+        return self.label_map[mask_id]
+
     def get_current_mask(self):
         return self.masks[self.mask_id]
 
-    def set_current_mask(self, mask):
+    def set_current_mask(self, mask, label: str = None):
         self.masks[self.mask_id] = mask
+        self.label_map[self.mask_id] = self.DEFAULT_LABEL if label is None else label
 
     def __getitem__(self, mask_id: int):
         return self.get_mask(mask_id)
@@ -167,14 +172,25 @@ class Annotator:
 
     def merge_masks(self):
         new_mask = np.bitwise_or(self.last_mask, self.merged_mask)
-        self.masks.append(new_mask, self.parent.annotation_layout.label_picker.currentItem().text())
+        self.masks.set_current_mask(new_mask, self.parent.annotation_layout.label_picker.currentItem().text())
         self.merged_mask = None
 
-    def visualize_last_mask(self):
+    def visualize_last_mask(self, label: str | None = None):
         last_mask = np.zeros_like(self.image)
         last_mask[:, :, 1] = self.last_mask
         if self.merged_mask is not None:
             last_mask[:, :, 2] = self.merged_mask
+        if label is not None:
+            props = regionprops(self.last_mask)[0]
+            cv2.putText(
+                last_mask,
+                label,
+                (int(props.centroid[0]), int(props.centroid[1])),
+                cv2.FONT_HERSHEY_DUPLEX,
+                0.75,
+                [0, 0, 0],
+                1
+            )
         self.parent.update(cv2.addWeighted(self.image.copy() if self.visualization is None else self.visualization.copy(), 0.5, last_mask, 0.5, 0))
 
     def visualize_mask(self):
