@@ -45,7 +45,9 @@ class SettingsLayout(QWidget):
         self.previous_file.setShortcut("D")
         self.save_mask = QPushButton("Save Mask")
         self.save_mask.clicked.connect(self.on_save_mask)
+        self.save_mask.setShortcut("Ctrl+S")
         self.next_file.clicked.connect(self.on_next_file)
+        self.next_file.setShortcut("F")
         self.previous_file.clicked.connect(self.on_previous_file)
         self.checkpoint_path_label = QLabel(self, text="Checkpoint Path")
         self.checkpoint_path = QLineEdit(self, text=self.parent().config.default_weights)
@@ -89,9 +91,11 @@ class SettingsLayout(QWidget):
         image = cv2.resize(image,
                            (self.parent().config.window_size, self.parent().config.window_size))  # TODO: Remove this
         self.parent().annotator.clear()
+        self.parent().image_label.clear()
         if os.path.exists(mask) and os.path.exists(labels):
             self._load_annotation(mask, labels)
         self.parent().set_image(image)
+        self.parent().update(image)
 
     def _load_annotation(self, mask, labels):
         mask = cv2.imread(mask, cv2.IMREAD_UNCHANGED)
