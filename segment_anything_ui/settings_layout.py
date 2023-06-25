@@ -18,7 +18,7 @@ class FilesHolder:
 
     def get_next(self):
         self.position += 1
-        if self.position >= len(self.files) - 1:
+        if self.position >= len(self.files):
             self.position = 0
         return self.files[self.position]
 
@@ -92,10 +92,12 @@ class SettingsLayout(QWidget):
                            (self.parent().config.window_size, self.parent().config.window_size))  # TODO: Remove this
         self.parent().annotator.clear()
         self.parent().image_label.clear()
+        self.parent().set_image(image)
         if os.path.exists(mask) and os.path.exists(labels):
             self._load_annotation(mask, labels)
-        self.parent().set_image(image)
-        self.parent().update(image)
+            self.parent().update(self.parent().annotator.merge_image_visualization())
+        else:
+            self.parent().update(image)
 
     def _load_annotation(self, mask, labels):
         mask = cv2.imread(mask, cv2.IMREAD_UNCHANGED)
@@ -105,7 +107,7 @@ class SettingsLayout(QWidget):
         new_labels = []
         for str_index, class_ in labels.items():
             single_mask = np.zeros((mask.shape[0], mask.shape[1]), dtype=np.uint8)
-            single_mask[mask == int(str_index)] = 1
+            single_mask[mask == int(str_index)] = 255
             masks.append(single_mask)
             new_labels.append(class_)
         self.parent().annotator.masks = MasksAnnotation.from_masks(masks, new_labels)

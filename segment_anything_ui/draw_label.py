@@ -9,7 +9,7 @@ from PySide6 import QtCore, QtWidgets
 from PySide6.QtGui import QPainter, QPen, QPolygon
 from PySide6.QtCore import QPoint
 
-from segment_anything_ui.image_pixmap import ImagePixmap
+from segment_anything_ui.config import Config
 
 
 class PaintType(Enum):
@@ -29,6 +29,14 @@ class BoundingBox:
 
     def to_numpy(self):
         return np.array([self.xstart, self.ystart, self.xend, self.yend])
+
+    def scale(self, sx, sy):
+        return BoundingBox(
+            xstart=self.xstart * sx,
+            ystart=self.ystart * sy,
+            xend=self.xend * sx,
+            yend=self.yend * sy
+        )
 
 
 @dataclasses.dataclass
@@ -50,6 +58,7 @@ class Polygon:
         return QPolygon([
             QPoint(x, y) for x, y in self.points
         ])
+
 
 class MaskIdPicker:
 
@@ -80,7 +89,7 @@ class DrawLabel(QtWidgets.QLabel):
         self._paint_type = PaintType.POINT
         self.polygon = Polygon()
         self.mask_enum: MaskIdPicker = MaskIdPicker(3)
-
+        self.config = Config()
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
 
     def paintEvent(self, paint_event):
@@ -169,7 +178,10 @@ class DrawLabel(QtWidgets.QLabel):
             self.polygon.points.append([ev.pos().x(), ev.pos().y()])
 
         if self._paint_type == PaintType.MASK_PICKER and ev.button() == QtCore.Qt.LeftButton:
-            point = [ev.pos().x(), ev.pos().y()]
+            size = self.size()
+            point = [
+                int(ev.pos().x() / size.width() * self.config.window_size),
+                int(ev.pos().y() / size.height() * self.config.window_size)]
             masks = np.array(self.parent().annotator.masks.masks)
             mask_ids = np.where(masks[:, point[1], point[0]])[0]
             print("Picking mask at point: {}".format(point))
@@ -197,9 +209,15 @@ class DrawLabel(QtWidgets.QLabel):
             self.parent().update(self.parent().annotator.merge_image_visualization())
 
     def get_annotations(self):
-        positive_points = [(p.x(), p.y()) for p in self.positive_points]
+        sx = self.config.window_size / self.size().width()
+        sy = self.config.window_size / self.size().height()
+        positive_points = [(
+            p.x() * sx,
+            p.y() * sy) for p in self.positive_points]
         positive_points = np.array(positive_points).reshape(-1, 2)
-        negative_points = [(p.x(), p.y()) for p in self.negative_points]
+        negative_points = [(
+            p.x() * sx,
+            p.y() * sy) for p in self.negative_points]
         negative_points = np.array(negative_points).reshape(-1, 2)
         labels = np.array([1, ] * len(positive_points) + [0, ] * len(negative_points))
         print(f"Positive points: {positive_points}")
@@ -208,7 +226,7 @@ class DrawLabel(QtWidgets.QLabel):
         return {
             "points": np.concatenate([positive_points, negative_points], axis=0),
             "labels": labels,
-            "bounding_boxes": self.bounding_box.to_numpy() if self.bounding_box else None
+            "bounding_boxes": self.bounding_box.scale(sx, sy).to_numpy() if self.bounding_box else None
         }
 
     def clear(self):

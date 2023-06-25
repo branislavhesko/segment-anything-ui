@@ -132,6 +132,7 @@ class Annotator:
     last_mask: np.ndarray | None = None
     merged_mask: np.ndarray | None = None
     parent: QWidget | None = None
+    cmap: plt.cm = None
 
     def __post_init__(self):
         self.MAX_MASKS = 10
@@ -154,8 +155,9 @@ class Annotator:
         )
         masks = generator.generate(self.image)
         masks = [(m["segmentation"] * 255).astype(np.uint8) for m in masks]
-        self.masks = MasksAnnotation.from_masks(masks)
-        self.cmap = get_cmap(len(self.parent.annotator.masks))
+        label = self.parent.annotation_layout.label_picker.currentItem().text()
+        self.masks = MasksAnnotation.from_masks(masks, [label, ] * len(masks))
+        self.cmap = get_cmap(len(self.masks))
 
     def make_prediction(self, annotation: dict):
         masks, scores, logits = self.predictor.predict(
@@ -185,13 +187,13 @@ class Annotator:
             cv2.putText(
                 last_mask,
                 label,
-                (int(props.centroid[0]), int(props.centroid[1])),
+                (int(props.centroid[1]), int(props.centroid[0])),
                 cv2.FONT_HERSHEY_DUPLEX,
                 0.75,
-                [0, 0, 0],
+                [255, 255, 255],
                 1
             )
-        self.parent.update(cv2.addWeighted(self.image.copy() if self.visualization is None else self.visualization.copy(), 0.5, last_mask, 0.5, 0))
+        self.parent.update(cv2.addWeighted(self.image.copy() if self.visualization is None else self.visualization.copy(), 0.8, last_mask, 0.5, 0))
 
     def visualize_mask(self):
         mask_argmax = self.make_instance_mask()
