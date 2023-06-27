@@ -108,7 +108,11 @@ class MasksAnnotation:
 
     def pop(self, mask_id: int = -1):
         mask = self.masks.pop(mask_id)
-        self.label_map.pop(mask_id)
+        self.label_map.pop(mask_id + 1)
+        new_label_map = {}
+        for index, value in enumerate(self.label_map.values()):
+            new_label_map[index + 1] = value
+        self.label_map = new_label_map
         return mask
 
     @classmethod

@@ -3,7 +3,7 @@ Simple UI for the model: [Segment anything](https://github.com/facebookresearch/
 
 
 Segment anything UI for annotations
-![GUI](./assets/parrots.png)
+![GUI](./assets/example.png)
 
 
 
@@ -18,14 +18,35 @@ Segment anything UI for annotations
 
 Currently, for saving a simple format is used: mask is saved as .png file, when masks are represented by values: 1 ... n and corresponding labels are saved as jsons. In json, labels are a map with mapping: MASK_ID: LABEL. MASK_ID is the id of the stored mask and LABEL is one of "labels.json" files.
 
+# Buttons
+
+| **Button** | **Description** | **Shortcut** |
+| --- | --- | --- |
+| Add Points | Mouse click will add positive (left) or negative (right) point. | A |
+| Add Box | Mouse click will add a box. | Q |
+| Annotate All | Runs regular grid annotation with parameters from the form | Enter |
+| Pick Mask | Pick mask when clicking on it. Cycling through masks if pixel belongs to multiple masks. | X |
+| Merge Masks | WIP: Merge masks when clicking on them. Cycling through masks if pixel belongs to multiple masks. | Z |
+| Move Current Mask to Front | Use current mask as background (less important) | None |
+| Cancel Annotation | Cancel current annotation | C |
+| Save Annotation | Save current annotation | N |  
+| Manual Polygon | Draw polygon with mouse | M |
+| ---- | ---- | ---- |
+| Open Files | Load files from the folder | None |
+| Next File | Load next image | F |
+| Previous File | Load previous image | T |
+| ---- | ---- | ---- |
+| Precompute All Embeddings | Currently not implemented | None |
+| Show Image | Currently not implemented | None |
+| Show Visualization | Currently not implemented | None |
 
 # TODO:
 
- - [ ] - FIX: mouse picker for small objects is not precise.
+ - [x] - FIX: mouse picker for small objects is not precise.
  - [ ] - Region merging.
- - [ ] - Manual annotation + brush + deleting options.
- - [ ] - Shortcut description.
+ - [x] - Manual annotation.
  - [x] - Saving and loading of masks.
  - [x] - Class support for assigning classes to objects.
  - [x] - Add object borders.
- - [ ] - Fix mask size and QLabel size for precise mouse clicks.
+ - [x] - Fix mask size and QLabel size for precise mouse clicks.
+ - [ ] - Draft mask when no points are visible.
