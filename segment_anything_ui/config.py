@@ -1,4 +1,5 @@
 import dataclasses
+import os
 
 
 @dataclasses.dataclass
@@ -8,4 +9,4 @@ class Config:
     label_file = "labels.json"
 
     def get_model_name(self):
-        return "_".join(self.default_weights.split("_")[1:3])
+        return "_".join(os.path.basename(self.default_weights).split("_")[1:3])
