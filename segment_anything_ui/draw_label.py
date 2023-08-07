@@ -180,8 +180,8 @@ class DrawLabel(QtWidgets.QLabel):
         if self._paint_type == PaintType.MASK_PICKER and ev.button() == QtCore.Qt.LeftButton:
             size = self.size()
             point = [
-                int(ev.pos().x() / size.width() * self.config.window_size),
-                int(ev.pos().y() / size.height() * self.config.window_size)]
+                int(ev.pos().x() / size.width() * self.config.window_size[0]),
+                int(ev.pos().y() / size.height() * self.config.window_size[1])]
             masks = np.array(self.parent().annotator.masks.masks)
             mask_ids = np.where(masks[:, point[1], point[0]])[0]
             print("Picking mask at point: {}".format(point))
@@ -209,8 +209,8 @@ class DrawLabel(QtWidgets.QLabel):
             self.parent().update(self.parent().annotator.merge_image_visualization())
 
     def get_annotations(self):
-        sx = self.config.window_size / self.size().width()
-        sy = self.config.window_size / self.size().height()
+        sx = self.config.window_size[0] / self.size().width()
+        sy = self.config.window_size[1] / self.size().height()
         positive_points = [(
             p.x() * sx,
             p.y() * sy) for p in self.positive_points]

@@ -26,7 +26,7 @@ class SegmentAnythingUI(QWidget):
         # self.setGeometry(100, 100, 800, 600)
         self.layout = QGridLayout(self)
         self.image_label = DrawLabel(self)
-        self.settings = SettingsLayout(self)
+        self.settings = SettingsLayout(self, config=self.config)
         self.info_label = QLabel("Information about running process.")
         self.sam = self.init_sam()
         self.annotator = Annotator(sam=self.sam, parent=self)
@@ -36,7 +36,7 @@ class SegmentAnythingUI(QWidget):
         self.layout.addWidget(self.settings, 0, 2)
         self.layout.addWidget(self.info_label, 1, 1)
 
-        self.set_image(np.zeros((self.config.window_size, self.config.window_size, 3), dtype=np.uint8))
+        self.set_image(np.zeros((self.config.window_size[1], self.config.window_size[0], 3), dtype=np.uint8))
         self.show()
 
     def set_image(self, image: np.ndarray):

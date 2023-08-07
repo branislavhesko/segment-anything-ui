@@ -7,6 +7,8 @@ import numpy as np
 from PySide6.QtWidgets import QPushButton, QWidget, QFileDialog, QVBoxLayout, QLineEdit, QLabel
 
 from segment_anything_ui.annotator import MasksAnnotation
+from segment_anything_ui.config import Config
+
 
 class FilesHolder:
     def __init__(self):
@@ -34,9 +36,11 @@ class SettingsLayout(QWidget):
     MASK_EXTENSION = "_mask.png"
     LABELS_EXTENSION = "_labels.json"
 
-    def __init__(self, parent=None):
+    def __init__(self, parent, config: Config) -> None:
         super().__init__(parent)
+        self.config = config
         self.actual_file: str = ""
+        self.actual_shape = self.config.window_size
         self.layout = QVBoxLayout(self)
         self.open_files = QPushButton("Open Files")
         self.open_files.clicked.connect(self.on_open_files)
@@ -81,6 +85,7 @@ class SettingsLayout(QWidget):
         mask = file.split(".")[0] + self.MASK_EXTENSION
         labels = file.split(".")[0] + self.LABELS_EXTENSION
         image = cv2.imread(file, cv2.IMREAD_UNCHANGED)
+        self.actual_shape = image.shape[:2][::-1]
         self.actual_file = file
         if len(image.shape) == 2:
             image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
@@ -89,7 +94,7 @@ class SettingsLayout(QWidget):
         if image.dtype in [np.float32, np.float64, np.uint16]:
             image = (image / np.amax(image) * 255).astype("uint8")
         image = cv2.resize(image,
-                           (self.parent().config.window_size, self.parent().config.window_size))  # TODO: Remove this
+                           (int(self.parent().config.window_size[0]), self.parent().config.window_size[1]))
         self.parent().annotator.clear()
         self.parent().image_label.clear()
         self.parent().set_image(image)
@@ -101,6 +106,8 @@ class SettingsLayout(QWidget):
 
     def _load_annotation(self, mask, labels):
         mask = cv2.imread(mask, cv2.IMREAD_UNCHANGED)
+        mask = cv2.resize(mask, (self.config.window_size[0], self.config.window_size[1]),
+                          interpolation=cv2.INTER_NEAREST)
         with open(labels, "r") as fp:
             labels: dict[str, str] = json.load(fp)
         masks = []
@@ -130,6 +137,7 @@ class SettingsLayout(QWidget):
         labels = self.parent().get_labels()
         with open(labels_path, "w") as f:
             json.dump(labels, f, indent=4)
+        masks = cv2.resize(masks, self.actual_shape, interpolation=cv2.INTER_NEAREST)
         cv2.imwrite(mask_path, masks)
 
     def on_checkpoint_path_changed(self):
