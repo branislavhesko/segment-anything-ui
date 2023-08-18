@@ -17,7 +17,11 @@ class ModifiedImageEncoder(nn.Module):
         return self.image_encoder(x) if self.embeddings is None else self.embeddings
 
 
-class StorableSam(Sam):
+class StorableSam:
+
+    def __init__(self, sam):
+        self.sam = sam
+        self.image_encoder = sam.image_encoder
 
     def transform(self, saved_path):
         self.image_encoder = ModifiedImageEncoder(self.image_encoder, saved_path)
