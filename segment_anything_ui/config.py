@@ -5,7 +5,7 @@ import os
 @dataclasses.dataclass
 class Config:
     window_size: tuple[int, int] | int = (1600, 900)
-    default_weights = "sam_vit_h_4b8939.pth"
+    default_weights = "sam_vit_b_01ec64.pth"
     label_file = "labels.json"
 
     def __post_init__(self):

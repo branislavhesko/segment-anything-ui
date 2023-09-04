@@ -199,7 +199,7 @@ class Annotator:
             )
         self.parent.update(cv2.addWeighted(self.image.copy() if self.visualization is None else self.visualization.copy(), 0.8, last_mask, 0.5, 0))
 
-    def visualize_mask(self):
+    def visualize_mask(self) -> tuple:
         mask_argmax = self.make_instance_mask()
         visualization = np.zeros_like(self.image)
         border = np.zeros(self.image.shape[:2], dtype=np.uint8)
@@ -209,7 +209,19 @@ class Annotator:
             single_mask[mask_argmax == i] = 1
             visualization[mask_argmax == i, :] = np.array(color[:3]) * 255
             border += single_mask - cv2.erode(
-                single_mask, np.ones((5, 5), np.uint8), iterations=1)
+                single_mask, np.ones((3, 3), np.uint8), iterations=1)
+            label = self.masks.get_label(i)
+            single_mask_center = np.mean(np.where(single_mask == 1), axis=1)
+            if self.parent.settings.is_show_text():
+                cv2.putText(
+                    visualization,
+                    label,
+                    (int(single_mask_center[1]), int(single_mask_center[0])),
+                    cv2.FONT_HERSHEY_PLAIN,
+                    0.5,
+                    [255, 255, 255],
+                    1
+                )
         border = (border == 0).astype(np.uint8)
         return visualization, border
 
