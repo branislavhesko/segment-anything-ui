@@ -31,6 +31,7 @@ class AnnotationLayout(QWidget):
         self.save_annotation = QPushButton("Save Annotation [ N ]")
         self.pick_mask = QPushButton("Pick Mask [ X ]")
         self.merge_masks = QPushButton("Merge Masks [ Z ]")
+        self.partial_annotation = QPushButton("Partial Annotation [ P ]")
         self.label_picker = QListWidget()
         self.label_picker.addItems(labels)
         self.label_picker.setCurrentRow(0)
@@ -44,6 +45,7 @@ class AnnotationLayout(QWidget):
         self.annotate_all.setShortcut(Qt.Key_Return)
         self.cancel_annotation.setShortcut("C")
         self.pick_mask.setShortcut("X")
+        self.partial_annotation.setShortcut("P")
 
         self.annotation_settings = CustomForm(self, AutomaticMaskGeneratorSettings())
         for w in [
@@ -54,6 +56,7 @@ class AnnotationLayout(QWidget):
                 self.merge_masks,
                 self.move_current_mask_background,
                 self.cancel_annotation,
+                self.partial_annotation,
                 self.save_annotation,
                 self.manual_polygon,
                 self.label_picker,
@@ -73,6 +76,11 @@ class AnnotationLayout(QWidget):
         self.remove_hidden_masks.clicked.connect(self.on_remove_hidden_masks)
         self.move_current_mask_background.clicked.connect(self.on_move_current_mask_background_fn)
         self.merge_masks.clicked.connect(self.on_merge_masks)
+        self.partial_annotation.clicked.connect(self.on_partial_annotation)
+
+    def on_partial_annotation(self):
+        self.parent().info_label.setText("Partial annotation!")
+        self.parent().annotator.pick_partial_mask()
 
     @staticmethod
     def _load_labels(config):

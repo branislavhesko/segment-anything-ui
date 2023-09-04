@@ -8,6 +8,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit
 from segment_anything import SamPredictor, automatic_mask_generator
 from segment_anything.build_sam import Sam
 from skimage.measure import regionprops
+from sympy import N
 import torch
 
 
@@ -134,6 +135,7 @@ class Annotator:
     predictor: SamPredictor | None = None
     visualization: np.ndarray | None = None
     last_mask: np.ndarray | None = None
+    partial_mask: np.ndarray | None = None
     merged_mask: np.ndarray | None = None
     parent: QWidget | None = None
     cmap: plt.cm = None
@@ -173,6 +175,13 @@ class Annotator:
         mask = masks[0]
         self.last_mask = mask * 255
 
+    def pick_partial_mask(self):
+        if self.partial_mask is None:
+            self.partial_mask = self.last_mask.copy()
+        else:
+            self.partial_mask = np.maximum(self.last_mask, self.partial_mask)
+        self.last_mask = None
+
     def move_current_mask_to_background(self):
         self.masks.set_current_mask(self.masks.get_current_mask() * 0.5)
 
@@ -184,6 +193,8 @@ class Annotator:
     def visualize_last_mask(self, label: str | None = None):
         last_mask = np.zeros_like(self.image)
         last_mask[:, :, 1] = self.last_mask
+        if self.partial_mask is not None:
+            last_mask[:, :, 0] = self.partial_mask
         if self.merged_mask is not None:
             last_mask[:, :, 2] = self.merged_mask
         if label is not None:
@@ -234,7 +245,7 @@ class Annotator:
         if not len(self.masks):
             return self.image
         visualization, border = self.visualize_mask()
-        self.visualization = cv2.addWeighted(self.image, 0.5, visualization, 0.9, 0) * border[:, :, np.newaxis]
+        self.visualization = cv2.addWeighted(self.image, 0.8, visualization, 0.7, 0) * border[:, :, np.newaxis]
         return self.visualization
 
     def remove_last_mask(self):
@@ -244,7 +255,12 @@ class Annotator:
         return self.masks.label_map
 
     def save_mask(self, label: str = MasksAnnotation.DEFAULT_LABEL):
-        self.masks.append(self.last_mask, label=label)
+        if self.partial_mask is not None:
+            last_mask = self.partial_mask
+            self.partial_mask = None
+        else:
+            last_mask = self.last_mask
+        self.masks.append(last_mask, label=label)
         if len(self.masks) >= self.MAX_MASKS:
             self.MAX_MASKS += 10
             self.cmap = get_cmap(self.MAX_MASKS)
@@ -253,3 +269,4 @@ class Annotator:
         self.last_mask = None
         self.visualization = None
         self.masks = MasksAnnotation()
+        self.partial_mask = None
