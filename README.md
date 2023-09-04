@@ -29,8 +29,9 @@ Currently, for saving a simple format is used: mask is saved as .png file, when 
 | Merge Masks | WIP: Merge masks when clicking on them. Cycling through masks if pixel belongs to multiple masks. | Z |
 | Move Current Mask to Front | Use current mask as background (less important) | None |
 | Cancel Annotation | Cancel current annotation | C |
-| Save Annotation | Save current annotation | N |  
+| Save Annotation | Save current annotation | N |
 | Manual Polygon | Draw polygon with mouse | M |
+| Partial Mask | Allows to split a single object into multiple prompts. When pressed, partial mask is stored and summed with the following promped masks. | P |
 | ---- | ---- | ---- |
 | Open Files | Load files from the folder | None |
 | Next File | Load next image | F |
