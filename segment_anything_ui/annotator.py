@@ -8,6 +8,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit
 from segment_anything import SamPredictor, automatic_mask_generator
 from segment_anything.build_sam import Sam
 from skimage.measure import regionprops
+from sympy import N
 import torch
 
 
@@ -134,6 +135,7 @@ class Annotator:
     predictor: SamPredictor | None = None
     visualization: np.ndarray | None = None
     last_mask: np.ndarray | None = None
+    partial_mask: np.ndarray | None = None
     merged_mask: np.ndarray | None = None
     parent: QWidget | None = None
     cmap: plt.cm = None
@@ -173,6 +175,13 @@ class Annotator:
         mask = masks[0]
         self.last_mask = mask * 255
 
+    def pick_partial_mask(self):
+        if self.partial_mask is None:
+            self.partial_mask = self.last_mask.copy()
+        else:
+            self.partial_mask = np.maximum(self.last_mask, self.partial_mask)
+        self.last_mask = None
+
     def move_current_mask_to_background(self):
         self.masks.set_current_mask(self.masks.get_current_mask() * 0.5)
 
@@ -184,6 +193,8 @@ class Annotator:
     def visualize_last_mask(self, label: str | None = None):
         last_mask = np.zeros_like(self.image)
         last_mask[:, :, 1] = self.last_mask
+        if self.partial_mask is not None:
+            last_mask[:, :, 0] = self.partial_mask
         if self.merged_mask is not None:
             last_mask[:, :, 2] = self.merged_mask
         if label is not None:
@@ -199,7 +210,7 @@ class Annotator:
             )
         self.parent.update(cv2.addWeighted(self.image.copy() if self.visualization is None else self.visualization.copy(), 0.8, last_mask, 0.5, 0))
 
-    def visualize_mask(self):
+    def visualize_mask(self) -> tuple:
         mask_argmax = self.make_instance_mask()
         visualization = np.zeros_like(self.image)
         border = np.zeros(self.image.shape[:2], dtype=np.uint8)
@@ -209,7 +220,19 @@ class Annotator:
             single_mask[mask_argmax == i] = 1
             visualization[mask_argmax == i, :] = np.array(color[:3]) * 255
             border += single_mask - cv2.erode(
-                single_mask, np.ones((5, 5), np.uint8), iterations=1)
+                single_mask, np.ones((3, 3), np.uint8), iterations=1)
+            label = self.masks.get_label(i)
+            single_mask_center = np.mean(np.where(single_mask == 1), axis=1)
+            if self.parent.settings.is_show_text():
+                cv2.putText(
+                    visualization,
+                    label,
+                    (int(single_mask_center[1]), int(single_mask_center[0])),
+                    cv2.FONT_HERSHEY_PLAIN,
+                    0.5,
+                    [255, 255, 255],
+                    1
+                )
         border = (border == 0).astype(np.uint8)
         return visualization, border
 
@@ -232,7 +255,12 @@ class Annotator:
         return self.masks.label_map
 
     def save_mask(self, label: str = MasksAnnotation.DEFAULT_LABEL):
-        self.masks.append(self.last_mask, label=label)
+        if self.partial_mask is not None:
+            last_mask = self.partial_mask
+            self.partial_mask = None
+        else:
+            last_mask = self.last_mask
+        self.masks.append(last_mask, label=label)
         if len(self.masks) >= self.MAX_MASKS:
             self.MAX_MASKS += 10
             self.cmap = get_cmap(self.MAX_MASKS)
@@ -241,3 +269,4 @@ class Annotator:
         self.last_mask = None
         self.visualization = None
         self.masks = MasksAnnotation()
+        self.partial_mask = None

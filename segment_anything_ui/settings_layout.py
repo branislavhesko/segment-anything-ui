@@ -4,7 +4,7 @@ import random
 
 import cv2
 import numpy as np
-from PySide6.QtWidgets import QPushButton, QWidget, QFileDialog, QVBoxLayout, QLineEdit, QLabel
+from PySide6.QtWidgets import QPushButton, QWidget, QFileDialog, QVBoxLayout, QLineEdit, QLabel, QCheckBox
 
 from segment_anything_ui.annotator import MasksAnnotation
 from segment_anything_ui.config import Config
@@ -61,9 +61,11 @@ class SettingsLayout(QWidget):
         self.show_visualization = QPushButton("Show Visualization")
         self.show_image.clicked.connect(self.on_show_image)
         self.show_visualization.clicked.connect(self.on_show_visualization)
+        self.show_text = QCheckBox("Show Text")
         self.layout.addWidget(self.open_files)
         self.layout.addWidget(self.next_file)
         self.layout.addWidget(self.save_mask)
+        self.layout.addWidget(self.show_text)
         self.layout.addWidget(self.checkpoint_path_label)
         self.layout.addWidget(self.checkpoint_path)
         self.checkpoint_path.returnPressed.connect(self.on_checkpoint_path_changed)
@@ -72,6 +74,9 @@ class SettingsLayout(QWidget):
         self.layout.addWidget(self.show_image)
         self.layout.addWidget(self.show_visualization)
         self.files = FilesHolder()
+
+    def is_show_text(self):
+        return self.show_text.isChecked()
 
     def on_next_file(self):
         file = self.files.get_next()
