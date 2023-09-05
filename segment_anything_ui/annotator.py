@@ -192,10 +192,10 @@ class Annotator:
                 last_mask,
                 label,
                 (int(props.centroid[1]), int(props.centroid[0])),
-                cv2.FONT_HERSHEY_DUPLEX,
-                0.75,
+                cv2.FONT_HERSHEY_SIMPLEX,
+                1.0,
                 [255, 255, 255],
-                1
+                2
             )
         self.parent.update(cv2.addWeighted(self.image.copy() if self.visualization is None else self.visualization.copy(), 0.8, last_mask, 0.5, 0))
 
@@ -222,7 +222,7 @@ class Annotator:
         if not len(self.masks):
             return self.image
         visualization, border = self.visualize_mask()
-        self.visualization = cv2.addWeighted(self.image, 0.5, visualization, 0.9, 0) * border[:, :, np.newaxis]
+        self.visualization = cv2.addWeighted(self.image, 0.8, visualization, 0.7, 0) * border[:, :, np.newaxis]
         return self.visualization
 
     def remove_last_mask(self):
