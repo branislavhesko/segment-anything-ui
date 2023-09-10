@@ -44,10 +44,10 @@ class SettingsLayout(QWidget):
         self.layout = QVBoxLayout(self)
         self.open_files = QPushButton("Open Files")
         self.open_files.clicked.connect(self.on_open_files)
-        self.next_file = QPushButton("Next File")
-        self.previous_file = QPushButton("Previous file")
-        self.previous_file.setShortcut("D")
-        self.save_mask = QPushButton("Save Mask")
+        self.next_file = QPushButton("Next File [ F ]")
+        self.previous_file = QPushButton("Previous file [ G ]")
+        self.previous_file.setShortcut("G")
+        self.save_mask = QPushButton("Save Mask [ Ctrl+S ]")
         self.save_mask.clicked.connect(self.on_save_mask)
         self.save_mask.setShortcut("Ctrl+S")
         self.next_file.clicked.connect(self.on_next_file)
@@ -62,8 +62,10 @@ class SettingsLayout(QWidget):
         self.show_image.clicked.connect(self.on_show_image)
         self.show_visualization.clicked.connect(self.on_show_visualization)
         self.show_text = QCheckBox("Show Text")
+        self.show_text.clicked.connect(self.on_show_text)
         self.layout.addWidget(self.open_files)
         self.layout.addWidget(self.next_file)
+        self.layout.addWidget(self.previous_file)
         self.layout.addWidget(self.save_mask)
         self.layout.addWidget(self.show_text)
         self.layout.addWidget(self.checkpoint_path_label)
@@ -77,6 +79,9 @@ class SettingsLayout(QWidget):
 
     def is_show_text(self):
         return self.show_text.isChecked()
+
+    def on_show_text(self):
+        self.parent().update(self.parent().annotator.merge_image_visualization())
 
     def on_next_file(self):
         file = self.files.get_next()

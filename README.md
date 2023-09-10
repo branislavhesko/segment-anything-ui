@@ -22,20 +22,20 @@ Currently, for saving a simple format is used: mask is saved as .png file, when 
 
 | **Button** | **Description** | **Shortcut** |
 | --- | --- | --- |
-| Add Points | Mouse click will add positive (left) or negative (right) point. | A |
+| Add Points | Mouse click will add positive (left) or negative (right) point. | W |
 | Add Box | Mouse click will add a box. | Q |
 | Annotate All | Runs regular grid annotation with parameters from the form | Enter |
 | Pick Mask | Pick mask when clicking on it. Cycling through masks if pixel belongs to multiple masks. | X |
 | Merge Masks | WIP: Merge masks when clicking on them. Cycling through masks if pixel belongs to multiple masks. | Z |
 | Move Current Mask to Front | Use current mask as background (less important) | None |
 | Cancel Annotation | Cancel current annotation | C |
-| Save Annotation | Save current annotation | N |
-| Manual Polygon | Draw polygon with mouse | M |
-| Partial Mask | Allows to split a single object into multiple prompts. When pressed, partial mask is stored and summed with the following promped masks. | P |
+| Save Annotation | Save current annotation | S |
+| Manual Polygon | Draw polygon with mouse | R |
+| Partial Mask | Allows to split a single object into multiple prompts. When pressed, partial mask is stored and summed with the following promped masks. | D |
 | ---- | ---- | ---- |
 | Open Files | Load files from the folder | None |
 | Next File | Load next image | F |
-| Previous File | Load previous image | T |
+| Previous File | Load previous image | G |
 | ---- | ---- | ---- |
 | Precompute All Embeddings | Currently not implemented | None |
 | Show Image | Currently not implemented | None |

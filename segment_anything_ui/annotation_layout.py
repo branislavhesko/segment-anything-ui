@@ -23,15 +23,16 @@ class AnnotationLayout(QWidget):
         self.layout = QVBoxLayout(self)
         labels = self._load_labels(config)
         self.layout.setAlignment(Qt.AlignTop)
-        self.add_point = QPushButton("Add Point [ A ]")
+        self.add_point = QPushButton("Add Point [ W ]")
         self.add_box = QPushButton("Add Box [ Q ]")
         self.annotate_all = QPushButton("Annotate All [ Enter ]")
-        self.manual_polygon = QPushButton("Manual Polygon [ M ]")
+        self.manual_polygon = QPushButton("Manual Polygon [ R ]")
         self.cancel_annotation = QPushButton("Cancel Annotation [ C ]")
-        self.save_annotation = QPushButton("Save Annotation [ N ]")
+        self.save_annotation = QPushButton("Save Annotation [ S ]")
         self.pick_mask = QPushButton("Pick Mask [ X ]")
         self.merge_masks = QPushButton("Merge Masks [ Z ]")
-        self.partial_annotation = QPushButton("Partial Annotation [ P ]")
+        self.delete_mask = QPushButton("Delete Mask [ V ]")
+        self.partial_annotation = QPushButton("Partial Annotation [ D ]")
         self.label_picker = QListWidget()
         self.label_picker.addItems(labels)
         self.label_picker.setCurrentRow(0)
@@ -39,13 +40,14 @@ class AnnotationLayout(QWidget):
         self.remove_hidden_masks = QPushButton("Remove Hidden Masks")
         self.remove_hidden_masks_label = QLabel("Remove Hidden Masks with hidden area less than")
         self.remove_hidden_masks_line = QLineEdit("0.5")
-        self.save_annotation.setShortcut("N")
-        self.add_point.setShortcut("A")
+        self.save_annotation.setShortcut("S")
+        self.add_point.setShortcut("W")
         self.add_box.setShortcut("Q")
         self.annotate_all.setShortcut(Qt.Key_Return)
         self.cancel_annotation.setShortcut("C")
         self.pick_mask.setShortcut("X")
-        self.partial_annotation.setShortcut("P")
+        self.partial_annotation.setShortcut("D")
+        self.delete_mask.setShortcut("V")
 
         self.annotation_settings = CustomForm(self, AutomaticMaskGeneratorSettings())
         for w in [
@@ -56,6 +58,7 @@ class AnnotationLayout(QWidget):
                 self.merge_masks,
                 self.move_current_mask_background,
                 self.cancel_annotation,
+                self.delete_mask,
                 self.partial_annotation,
                 self.save_annotation,
                 self.manual_polygon,
@@ -77,10 +80,19 @@ class AnnotationLayout(QWidget):
         self.move_current_mask_background.clicked.connect(self.on_move_current_mask_background_fn)
         self.merge_masks.clicked.connect(self.on_merge_masks)
         self.partial_annotation.clicked.connect(self.on_partial_annotation)
+        self.delete_mask.clicked.connect(self.on_delete_mask)
+
+    def on_delete_mask(self):
+        self.parent().info_label.setText("Deleting mask!")
+        self.parent().annotator.masks.pop(self.parent().annotator.masks.mask_id)
+        self.parent().annotator.masks.mask_id = -1
+        self.parent().annotator.last_mask = None
+        self.parent().update(self.parent().annotator.merge_image_visualization())
 
     def on_partial_annotation(self):
         self.parent().info_label.setText("Partial annotation!")
         self.parent().annotator.pick_partial_mask()
+        self.parent().image_label.clear()
 
     @staticmethod
     def _load_labels(config):
