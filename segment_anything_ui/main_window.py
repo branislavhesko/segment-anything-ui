@@ -1,5 +1,6 @@
 import sys
 
+import cv2
 import numpy as np
 import torch
 from PySide6.QtWidgets import (QApplication, QGridLayout, QLabel,
@@ -45,6 +46,7 @@ class SegmentAnythingUI(QWidget):
         self.update(image)
 
     def update(self, image: np.ndarray):
+        image = cv2.resize(image, self.config.window_size)
         pixmap = ImagePixmap()
         pixmap.set_image(image)
         print("Updating image")

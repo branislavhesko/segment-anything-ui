@@ -1,15 +1,14 @@
 import copy
-import dataclasses
 from enum import Enum
 
 import cv2
 import numpy as np
 import PySide6
 from PySide6 import QtCore, QtWidgets
-from PySide6.QtGui import QPainter, QPen, QPolygon
-from PySide6.QtCore import QPoint
+from PySide6.QtGui import QPainter, QPen
 
 from segment_anything_ui.config import Config
+from segment_anything_ui.utils.shapes import BoundingBox, Polygon
 
 
 class PaintType(Enum):
@@ -18,46 +17,7 @@ class PaintType(Enum):
     MASK = 2
     POLYGON = 3
     MASK_PICKER = 4
-
-
-@dataclasses.dataclass
-class BoundingBox:
-    xstart: float
-    ystart: float
-    xend: float = -1.
-    yend: float = -1.
-
-    def to_numpy(self):
-        return np.array([self.xstart, self.ystart, self.xend, self.yend])
-
-    def scale(self, sx, sy):
-        return BoundingBox(
-            xstart=self.xstart * sx,
-            ystart=self.ystart * sy,
-            xend=self.xend * sx,
-            yend=self.yend * sy
-        )
-
-
-@dataclasses.dataclass
-class Polygon:
-    points: list = dataclasses.field(default_factory=list)
-
-    def to_numpy(self):
-        return np.array(self.points).reshape(-1, 2)
-
-    def to_mask(self, num_rows, num_cols):
-        mask = np.zeros((num_rows, num_cols))
-        mask = cv2.fillPoly(mask, pts=[self.to_numpy(), ], color=255)
-        return mask
-
-    def is_plotable(self):
-        return len(self.points) > 3
-
-    def to_qpolygon(self):
-        return QPolygon([
-            QPoint(x, y) for x, y in self.points
-        ])
+    ZOOM_PICKER = 5
 
 
 class MaskIdPicker:
@@ -93,6 +53,7 @@ class DrawLabel(QtWidgets.QLabel):
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self._zoom_center = (0, 0)
         self._zoom_factor = 1.0
+        self._zoom_bounding_box: BoundingBox | None = None
 
     def paintEvent(self, paint_event):
         painter = QPainter(self)
@@ -148,7 +109,7 @@ class DrawLabel(QtWidgets.QLabel):
         self._paint_type = paint_type
 
     def mouseMoveEvent(self, ev: PySide6.QtGui.QMouseEvent) -> None:
-        if self._paint_type == PaintType.BOX:
+        if self._paint_type in [PaintType.BOX, PaintType.ZOOM_PICKER]:
             self.partial_box = copy.deepcopy(self.bounding_box)
             self.partial_box.xend = ev.pos().x()
             self.partial_box.yend = ev.pos().y()
@@ -162,18 +123,24 @@ class DrawLabel(QtWidgets.QLabel):
             elif cursor_event.button() == QtCore.Qt.RightButton:
                 self.negative_points.append(cursor_event.pos())
             # self.chosen_points.append(self.mapFromGlobal(QtGui.QCursor.pos()))
-        elif self._paint_type == PaintType.BOX:
+        elif self._paint_type in [PaintType.BOX, PaintType.ZOOM_PICKER]:
             if cursor_event.button() == QtCore.Qt.LeftButton:
                 self.bounding_box.xend = cursor_event.pos().x()
                 self.bounding_box.yend = cursor_event.pos().y()
                 self.partial_box = BoundingBox(-1, -1, -1, -1)
-        if not self._paint_type == PaintType.MASK_PICKER:
+        if self._paint_type == PaintType.ZOOM_PICKER:
+            self.parent().annotator.zoomed_bounding_box = copy.deepcopy(self.bounding_box)
+            self.bounding_box = None
+            self.parent().annotator.make_embedding()
+            self.parent().update(self.parent().annotator.merge_image_visualization())
+
+        if not self._paint_type == PaintType.MASK_PICKER and not self._paint_type == PaintType.ZOOM_PICKER:
             self.parent().annotator.make_prediction(self.get_annotations())
             self.parent().annotator.visualize_last_mask()
         self.update()
 
     def mousePressEvent(self, ev: PySide6.QtGui.QMouseEvent) -> None:
-        if self._paint_type == PaintType.BOX and ev.button() == QtCore.Qt.LeftButton:
+        if self._paint_type in [PaintType.BOX, PaintType.ZOOM_PICKER] and ev.button() == QtCore.Qt.LeftButton:
             self.bounding_box = BoundingBox(xstart=ev.pos().x(), ystart=ev.pos().y())
 
         if self._paint_type == PaintType.POLYGON and ev.button() == QtCore.Qt.LeftButton:
@@ -199,6 +166,11 @@ class DrawLabel(QtWidgets.QLabel):
             self.parent().annotator.masks.mask_id = mask_id
             self.parent().annotator.last_mask = local_mask
             self.parent().annotator.visualize_last_mask(label)
+        self.update()
+
+    def zoom_to_rectangle(self, xstart, ystart, xend, yend):
+        picked_image = self.parent().annotator.image[ystart:yend, xstart:xend, :]
+        self.parent().annotator.image = cv2.resize(picked_image, (self.config.window_size[0], self.config.window_size[1]))
         self.update()
 
     def wheelEvent(self, e):
@@ -229,6 +201,8 @@ class DrawLabel(QtWidgets.QLabel):
             self.parent().annotator.image[bounding_box_limited[1]:bounding_box_limited[3], bounding_box_limited[0]:bounding_box_limited[2], :],
             (bounding_box_limited[2] - bounding_box_limited[0], bounding_box_limited[3] - bounding_box_limited[1])
         )
+        # TODO: Fix zooming
+        raise NotImplementedError("Zooming not implemented yet")
         self.parent().annotator.image = zoomed_image
         print(f"Bounding box: {bounding_box}")
         self.parent().update(self.parent().annotator.image)

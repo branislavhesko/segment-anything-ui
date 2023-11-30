@@ -8,14 +8,39 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit
 from segment_anything import SamPredictor, automatic_mask_generator
 from segment_anything.build_sam import Sam
 from skimage.measure import regionprops
-from sympy import N
 import torch
+
+from segment_anything_ui.utils.shapes import BoundingBox
 
 
 def get_cmap(n, name='hsv'):
     '''Returns a function that maps each index in 0, 1, ..., n-1 to a distinct
     RGB color; the keyword argument name must be a standard mpl colormap name.'''
     return plt.cm.get_cmap(name, n)
+
+
+def crop_image(image, box: BoundingBox | None = None, image_shape: tuple[int, int] | None = None):
+    if image_shape is None:
+        image_shape = image.shape[:2][::-1]
+    if box is None:
+        return cv2.resize(image, image_shape)
+    if len(image.shape) == 2:
+        return cv2.resize(image[box.ystart:box.yend, box.xstart:box.xend], image_shape)
+    return cv2.resize(image[box.ystart:box.yend, box.xstart:box.xend, :], image_shape)
+
+
+def insert_image(image, box: BoundingBox | None = None):
+    new_image = np.zeros_like(image)
+    if box is None:
+        new_image = image
+    else:
+        if len(image.shape) == 2:
+            new_image[box.ystart:box.yend, box.xstart:box.xend] = cv2.resize(
+                image.astype(np.uint8), (int(box.xend) - int(box.xstart), int(box.yend) - int(box.ystart)))
+        else:
+            new_image[box.ystart:box.yend, box.xstart:box.xend, :] = cv2.resize(
+                image.astype(np.uint8), (int(box.xend) - int(box.xstart), int(box.yend) - int(box.ystart)))
+    return new_image
 
 
 @dataclasses.dataclass()
@@ -139,6 +164,8 @@ class Annotator:
     merged_mask: np.ndarray | None = None
     parent: QWidget | None = None
     cmap: plt.cm = None
+    original_image: np.ndarray | None = None
+    zoomed_bounding_box: BoundingBox | None = None
 
     def __post_init__(self):
         self.MAX_MASKS = 10
@@ -152,7 +179,7 @@ class Annotator:
         if self.sam is None:
             return
         self.predictor = SamPredictor(self.sam)
-        self.predictor.set_image(self.image)
+        self.predictor.set_image(crop_image(self.image, self.zoomed_bounding_box))
 
     def predict_all(self, settings: AutomaticMaskGeneratorSettings):
         generator = automatic_mask_generator.SamAutomaticMaskGenerator(
@@ -173,7 +200,7 @@ class Annotator:
             multimask_output=False
         )
         mask = masks[0]
-        self.last_mask = mask * 255
+        self.last_mask = insert_image(mask, self.zoomed_bounding_box) * 255
 
     def pick_partial_mask(self):
         if self.partial_mask is None:
@@ -208,9 +235,11 @@ class Annotator:
                 [255, 255, 255],
                 2
             )
-        self.parent.update(cv2.addWeighted(self.image.copy() if self.visualization is None else self.visualization.copy(), 0.8, last_mask, 0.5, 0))
+        visualization = cv2.addWeighted(self.image.copy() if self.visualization is None else self.visualization.copy(),
+                                        0.8, last_mask, 0.5, 0)
+        self.parent.update(crop_image(visualization, self.zoomed_bounding_box))
 
-    def visualize_mask(self) -> tuple:
+    def _visualize_mask(self) -> tuple:
         mask_argmax = self.make_instance_mask()
         visualization = np.zeros_like(self.image)
         border = np.zeros(self.image.shape[:2], dtype=np.uint8)
@@ -242,11 +271,12 @@ class Annotator:
         return mask_argmax
 
     def merge_image_visualization(self):
+        image = self.image.copy()
         if not len(self.masks):
-            return self.image
-        visualization, border = self.visualize_mask()
-        self.visualization = cv2.addWeighted(self.image, 0.8, visualization, 0.7, 0) * border[:, :, np.newaxis]
-        return self.visualization
+            return image
+        visualization, border = self._visualize_mask()
+        self.visualization = cv2.addWeighted(image, 0.8, visualization, 0.7, 0) * border[:, :, np.newaxis]
+        return crop_image(self.visualization, self.zoomed_bounding_box)
 
     def remove_last_mask(self):
         self.masks.pop()

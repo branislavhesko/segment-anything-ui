@@ -33,6 +33,7 @@ class AnnotationLayout(QWidget):
         self.merge_masks = QPushButton(f"Merge Masks [ {config.key_mapping.MERGE_MASK.name} ]")
         self.delete_mask = QPushButton(f"Delete Mask [ {config.key_mapping.DELETE_MASK.name} ]")
         self.partial_annotation = QPushButton(f"Partial Annotation [ {config.key_mapping.PARTIAL_ANNOTATION.name} ]")
+        self.zoom_rectangle = QPushButton(f"Zoom Rectangle [ {config.key_mapping.ZOOM_RECTANGLE.name} ]")
         self.label_picker = QListWidget()
         self.label_picker.addItems(labels)
         self.label_picker.setCurrentRow(0)
@@ -48,6 +49,7 @@ class AnnotationLayout(QWidget):
         self.pick_mask.setShortcut(config.key_mapping.PICK_MASK.key)
         self.partial_annotation.setShortcut(config.key_mapping.PARTIAL_ANNOTATION.key)
         self.delete_mask.setShortcut(config.key_mapping.DELETE_MASK.key)
+        self.zoom_rectangle.setShortcut(config.key_mapping.ZOOM_RECTANGLE.key)
 
         self.annotation_settings = CustomForm(self, AutomaticMaskGeneratorSettings())
         for w in [
@@ -63,6 +65,7 @@ class AnnotationLayout(QWidget):
                 self.save_annotation,
                 self.manual_polygon,
                 self.label_picker,
+                self.zoom_rectangle,
                 self.annotation_settings,
                 self.remove_hidden_masks,
                 self.remove_hidden_masks_label,
@@ -81,6 +84,7 @@ class AnnotationLayout(QWidget):
         self.merge_masks.clicked.connect(self.on_merge_masks)
         self.partial_annotation.clicked.connect(self.on_partial_annotation)
         self.delete_mask.clicked.connect(self.on_delete_mask)
+        self.zoom_rectangle.clicked.connect(self.on_zoom_rectangle)
 
     def on_delete_mask(self):
         self.parent().info_label.setText("Deleting mask!")
@@ -155,6 +159,17 @@ class AnnotationLayout(QWidget):
     def on_add_box(self):
         self.parent().info_label.setText("Adding box annotation!")
         self.parent().image_label.change_paint_type(PaintType.BOX)
+
+    def on_zoom_rectangle(self):
+        if self.parent().image_label.paint_type == PaintType.ZOOM_PICKER:
+            self.parent().info_label.setText("Zooming rectangle OFF!")
+            self.parent().image_label.change_paint_type(PaintType.POINT)
+            self.parent().annotator.zoomed_bounding_box = None
+            self.parent().update(self.parent().annotator.merge_image_visualization())
+        else:
+            self.parent().info_label.setText("Zooming rectangle ON!")
+            self.zoom_rectangle.setText(f"Zoom Rectangle [ {self.config.key_mapping.ZOOM_RECTANGLE.name} ]")
+            self.parent().image_label.change_paint_type(PaintType.ZOOM_PICKER)
 
     def on_annotate_all(self):
         self.parent().info_label.setText("Annotating all. This make take some time.")

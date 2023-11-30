@@ -6,7 +6,7 @@ from PySide6.QtCore import Qt
 
 @dataclasses.dataclass(frozen=True)
 class Keymap:
-    key: Qt.Key
+    key: Qt.Key | str
     name: str
 
 
@@ -25,8 +25,9 @@ class KeyBindings:
 
     NEXT_FILE: Keymap = Keymap(Qt.Key.Key_F, "F")
     PREVIOUS_FILE: Keymap = Keymap(Qt.Key.Key_G, "G")
-    SAVE_MASK: Keymap = Keymap(Qt.Key.Key_S, "Ctrl+S")
+    SAVE_MASK: Keymap = Keymap("Ctrl+S", "Ctrl+S")
     PRECOMPUTE: Keymap = Keymap(Qt.Key.Key_P, "P")
+    ZOOM_RECTANGLE: Keymap = Keymap(Qt.Key.Key_E, "E")
 
 
 @dataclasses.dataclass
