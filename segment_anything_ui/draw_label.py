@@ -91,6 +91,8 @@ class DrawLabel(QtWidgets.QLabel):
         self.mask_enum: MaskIdPicker = MaskIdPicker(3)
         self.config = Config()
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
+        self._zoom_center = (0, 0)
+        self._zoom_factor = 1.0
 
     def paintEvent(self, paint_event):
         painter = QPainter(self)
@@ -197,6 +199,39 @@ class DrawLabel(QtWidgets.QLabel):
             self.parent().annotator.masks.mask_id = mask_id
             self.parent().annotator.last_mask = local_mask
             self.parent().annotator.visualize_last_mask(label)
+        self.update()
+
+    def wheelEvent(self, e):
+        position = e.position()
+        delta = e.angleDelta()
+        print(f"Position {position} delta {delta}")
+        if delta.y() > 0:
+            self._zoom_factor *= 1.01
+        else:
+            self._zoom_factor /= 1.01
+        self._zoom_center = (position.x() / self.size().width() * self.config.window_size[0],
+                             position.y() / self.size().height() * self.config.window_size[1])
+        print(f"Zoom factor: {self._zoom_factor} center: {self._zoom_center}")
+        zoomed_image = np.zeros_like(self.parent().annotator.image)
+        bounding_box = (
+            int(self._zoom_center[0] - 1. / self._zoom_factor * self.config.window_size[0] / 2),
+            int(self._zoom_center[1] - 1. / self._zoom_factor * self.config.window_size[1] / 2),
+            int(self._zoom_center[0] + 1. / self._zoom_factor * self.config.window_size[0] / 2),
+            int(self._zoom_center[1] + 1. / self._zoom_factor * self.config.window_size[1] / 2)
+        )
+        bounding_box_limited = (
+            max(0, bounding_box[0]),
+            max(0, bounding_box[1]),
+            min(self.config.window_size[0], bounding_box[2]),
+            min(self.config.window_size[1], bounding_box[3])
+        )
+        zoomed_image[bounding_box_limited[1]:bounding_box_limited[3], bounding_box_limited[0]:bounding_box_limited[2], :] = cv2.resize(
+            self.parent().annotator.image[bounding_box_limited[1]:bounding_box_limited[3], bounding_box_limited[0]:bounding_box_limited[2], :],
+            (bounding_box_limited[2] - bounding_box_limited[0], bounding_box_limited[3] - bounding_box_limited[1])
+        )
+        self.parent().annotator.image = zoomed_image
+        print(f"Bounding box: {bounding_box}")
+        self.parent().update(self.parent().annotator.image)
         self.update()
 
     def keyPressEvent(self, ev: PySide6.QtGui.QKeyEvent) -> None:
