@@ -9,9 +9,9 @@ Segment anything UI for annotations
 
 # Usage
 
- 1. Install segment-anything python package from Github: [Segment anything](https://github.com/facebookresearch/segment-anything).
- 2. Download checkpoint [Checkpoint](https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth) and put it into workspace folder.
- 3. Fill default_path in config.py.
+ 1. Install segment-anything python package from Github: [Segment anything](https://github.com/facebookresearch/segment-anything). Usually it is enough to run: ```pip install git+https://github.com/facebookresearch/segment-anything.git```.
+ 2. Download checkpoint [Checkpoint_Huge](https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth) or [Checkpoint_Large](https://dl.fbaipublicfiles.com/segment_anything/sam_vit_l_0b3195.pth) or [Checkpoint_Base](https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth) and put it into workspace folder.
+ 3. Fill default_path in ```segment_anything_ui/config.py```.
  4. Install requirements.txt. ```pip install -r requirements.txt```.
  5. ```export PYTHONPATH=$PYTHONPATH:.```.
  6. ```python segment_anything_ui/main_window.py```.
@@ -51,3 +51,4 @@ Currently, for saving a simple format is used: mask is saved as .png file, when 
  - [x] - Add object borders.
  - [x] - Fix mask size and QLabel size for precise mouse clicks.
  - [ ] - Draft mask when no points are visible.
+ - [x] - Box zoom support.

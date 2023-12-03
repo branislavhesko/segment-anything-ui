@@ -4,3 +4,4 @@ torch
 numpy
 segment-anything
 matplotlib
+scikit-image
