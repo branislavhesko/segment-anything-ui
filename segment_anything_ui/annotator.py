@@ -19,11 +19,16 @@ def get_cmap(n, name='hsv'):
     return plt.cm.get_cmap(name, n)
 
 
-def crop_image(image, box: BoundingBox | None = None, image_shape: tuple[int, int] | None = None):
+def crop_image(
+        image,
+        box: BoundingBox | None = None,
+        image_shape: tuple[int, int] | None = None
+):
     if image_shape is None:
         image_shape = image.shape[:2][::-1]
     if box is None:
         return cv2.resize(image, image_shape)
+
     if len(image.shape) == 2:
         return cv2.resize(image[box.ystart:box.yend, box.xstart:box.xend], image_shape)
     return cv2.resize(image[box.ystart:box.yend, box.xstart:box.xend, :], image_shape)
@@ -294,6 +299,11 @@ class Annotator:
         if len(self.masks) >= self.MAX_MASKS:
             self.MAX_MASKS += 10
             self.cmap = get_cmap(self.MAX_MASKS)
+
+    def clear_last_masks(self):
+        self.last_mask = None
+        self.partial_mask = None
+        self.visualization = None
 
     def clear(self):
         self.last_mask = None

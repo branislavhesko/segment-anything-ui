@@ -8,10 +8,10 @@ from PySide6.QtGui import QPolygon
 
 @dataclasses.dataclass
 class BoundingBox:
-    xstart: float
-    ystart: float
-    xend: float = -1.
-    yend: float = -1.
+    xstart: float | int
+    ystart: float | int
+    xend: float | int = -1.
+    yend: float | int = -1.
 
     def to_numpy(self):
         return np.array([self.xstart, self.ystart, self.xend, self.yend])
@@ -24,6 +24,13 @@ class BoundingBox:
             yend=self.yend * sy
         )
 
+    def to_int(self):
+        return BoundingBox(
+            xstart=int(self.xstart),
+            ystart=int(self.ystart),
+            xend=int(self.xend),
+            yend=int(self.yend)
+        )
 
 @dataclasses.dataclass
 class Polygon:

@@ -19,6 +19,7 @@ class AnnotationLayout(QWidget):
     def __init__(self, parent, config) -> None:
         super().__init__(parent)
         self.config = config
+        self.zoom_flag = False
         self.merge_state = MergeState.PICKING
         self.layout = QVBoxLayout(self)
         labels = self._load_labels(config)
@@ -161,15 +162,18 @@ class AnnotationLayout(QWidget):
         self.parent().image_label.change_paint_type(PaintType.BOX)
 
     def on_zoom_rectangle(self):
-        if self.parent().image_label.paint_type == PaintType.ZOOM_PICKER:
+        if self.zoom_flag:
             self.parent().info_label.setText("Zooming rectangle OFF!")
             self.parent().image_label.change_paint_type(PaintType.POINT)
             self.parent().annotator.zoomed_bounding_box = None
+            self.parent().annotator.make_embedding()
             self.parent().update(self.parent().annotator.merge_image_visualization())
+            self.zoom_flag = False
         else:
             self.parent().info_label.setText("Zooming rectangle ON!")
             self.zoom_rectangle.setText(f"Zoom Rectangle [ {self.config.key_mapping.ZOOM_RECTANGLE.name} ]")
             self.parent().image_label.change_paint_type(PaintType.ZOOM_PICKER)
+            self.zoom_flag = True
 
     def on_annotate_all(self):
         self.parent().info_label.setText("Annotating all. This make take some time.")
@@ -179,6 +183,7 @@ class AnnotationLayout(QWidget):
 
     def on_cancel_annotation(self):
         self.parent().image_label.clear()
+        self.parent().annotator.clear_last_masks()
         self.parent().update(self.parent().annotator.merge_image_visualization())
 
     def on_save_annotation(self):
@@ -188,3 +193,4 @@ class AnnotationLayout(QWidget):
         self.parent().annotator.save_mask(label=self.label_picker.currentItem().text())
         self.parent().update(self.parent().annotator.merge_image_visualization())
         self.parent().image_label.clear()
+

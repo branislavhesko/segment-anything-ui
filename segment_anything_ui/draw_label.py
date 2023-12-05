@@ -129,7 +129,7 @@ class DrawLabel(QtWidgets.QLabel):
                 self.bounding_box.yend = cursor_event.pos().y()
                 self.partial_box = BoundingBox(-1, -1, -1, -1)
         if self._paint_type == PaintType.ZOOM_PICKER:
-            self.parent().annotator.zoomed_bounding_box = copy.deepcopy(self.bounding_box)
+            self.parent().annotator.zoomed_bounding_box = self.bounding_box.scale(*self._get_scale()).to_int()
             self.bounding_box = None
             self.parent().annotator.make_embedding()
             self.parent().update(self.parent().annotator.merge_image_visualization())
@@ -173,41 +173,6 @@ class DrawLabel(QtWidgets.QLabel):
         self.parent().annotator.image = cv2.resize(picked_image, (self.config.window_size[0], self.config.window_size[1]))
         self.update()
 
-    def wheelEvent(self, e):
-        position = e.position()
-        delta = e.angleDelta()
-        print(f"Position {position} delta {delta}")
-        if delta.y() > 0:
-            self._zoom_factor *= 1.01
-        else:
-            self._zoom_factor /= 1.01
-        self._zoom_center = (position.x() / self.size().width() * self.config.window_size[0],
-                             position.y() / self.size().height() * self.config.window_size[1])
-        print(f"Zoom factor: {self._zoom_factor} center: {self._zoom_center}")
-        zoomed_image = np.zeros_like(self.parent().annotator.image)
-        bounding_box = (
-            int(self._zoom_center[0] - 1. / self._zoom_factor * self.config.window_size[0] / 2),
-            int(self._zoom_center[1] - 1. / self._zoom_factor * self.config.window_size[1] / 2),
-            int(self._zoom_center[0] + 1. / self._zoom_factor * self.config.window_size[0] / 2),
-            int(self._zoom_center[1] + 1. / self._zoom_factor * self.config.window_size[1] / 2)
-        )
-        bounding_box_limited = (
-            max(0, bounding_box[0]),
-            max(0, bounding_box[1]),
-            min(self.config.window_size[0], bounding_box[2]),
-            min(self.config.window_size[1], bounding_box[3])
-        )
-        zoomed_image[bounding_box_limited[1]:bounding_box_limited[3], bounding_box_limited[0]:bounding_box_limited[2], :] = cv2.resize(
-            self.parent().annotator.image[bounding_box_limited[1]:bounding_box_limited[3], bounding_box_limited[0]:bounding_box_limited[2], :],
-            (bounding_box_limited[2] - bounding_box_limited[0], bounding_box_limited[3] - bounding_box_limited[1])
-        )
-        # TODO: Fix zooming
-        raise NotImplementedError("Zooming not implemented yet")
-        self.parent().annotator.image = zoomed_image
-        print(f"Bounding box: {bounding_box}")
-        self.parent().update(self.parent().annotator.image)
-        self.update()
-
     def keyPressEvent(self, ev: PySide6.QtGui.QKeyEvent) -> None:
         print(ev.key())
         if self._paint_type == PaintType.MASK_PICKER and ev.key() == QtCore.Qt.Key.Key_D and len(self.parent().annotator.masks):
@@ -217,9 +182,11 @@ class DrawLabel(QtWidgets.QLabel):
             self.parent().annotator.last_mask = None
             self.parent().update(self.parent().annotator.merge_image_visualization())
 
+    def _get_scale(self):
+        return self.config.window_size[0] / self.size().width(), self.config.window_size[1] / self.size().height()
+
     def get_annotations(self):
-        sx = self.config.window_size[0] / self.size().width()
-        sy = self.config.window_size[1] / self.size().height()
+        sx, sy = self._get_scale()
         positive_points = [(
             p.x() * sx,
             p.y() * sy) for p in self.positive_points]
