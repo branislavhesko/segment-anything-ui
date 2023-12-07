@@ -13,7 +13,7 @@ from segment_anything_ui.modeling.storable_sam import StorableSam
 from segment_anything_ui.config import Config
 
 config = Config()
-sam = sam_model_registry[config.get_model_name()](checkpoint=config.default_weights)
+sam = sam_model_registry[config.get_sam_model_name()](checkpoint=config.default_weights)
 allowed_extensions = [".jpg", ".png", ".tif", ".tiff"]
 
 

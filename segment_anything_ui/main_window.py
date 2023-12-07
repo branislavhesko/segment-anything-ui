@@ -13,6 +13,7 @@ from segment_anything_ui.annotation_layout import AnnotationLayout
 from segment_anything_ui.config import Config
 from segment_anything_ui.draw_label import DrawLabel
 from segment_anything_ui.image_pixmap import ImagePixmap
+from segment_anything_ui.modeling.efficientvit.sam_model_zoo import create_sam_model
 from segment_anything_ui.settings_layout import SettingsLayout
 
 
@@ -54,7 +55,10 @@ class SegmentAnythingUI(QWidget):
 
     def init_sam(self):
         try:
-            sam = sam_model_registry[self.config.get_model_name()](checkpoint=str(self.settings.checkpoint_path.text()))
+            if "l2" in self.config.default_weights:
+                sam = create_sam_model("l2", pretrained=True, weight_url=str(self.settings.checkpoint_path.text()), image_size=1024)
+            else:
+                sam = sam_model_registry[self.config.get_sam_model_name()](checkpoint=str(self.settings.checkpoint_path.text()))
             sam.to(device=self.device)
         except Exception as e:
             print(e)

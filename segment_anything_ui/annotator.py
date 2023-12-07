@@ -10,6 +10,7 @@ from segment_anything.build_sam import Sam
 from skimage.measure import regionprops
 import torch
 
+from segment_anything_ui.modeling.efficientvit.models.efficientvit.sam import EfficientViTSam, EfficientViTSamPredictor
 from segment_anything_ui.utils.shapes import BoundingBox
 
 
@@ -162,7 +163,7 @@ class Annotator:
     embedding: torch.Tensor | None = None
     image: np.ndarray | None = None
     masks: MasksAnnotation = dataclasses.field(default_factory=MasksAnnotation)
-    predictor: SamPredictor | None = None
+    predictor: SamPredictor | EfficientViTSamPredictor | None = None
     visualization: np.ndarray | None = None
     last_mask: np.ndarray | None = None
     partial_mask: np.ndarray | None = None
@@ -183,7 +184,10 @@ class Annotator:
     def make_embedding(self):
         if self.sam is None:
             return
-        self.predictor = SamPredictor(self.sam)
+        if isinstance(self.sam, EfficientViTSam):
+            self.predictor = EfficientViTSamPredictor(self.sam)
+        else:
+            self.predictor = SamPredictor(self.sam)
         self.predictor.set_image(crop_image(self.image, self.zoomed_bounding_box))
 
     def predict_all(self, settings: AutomaticMaskGeneratorSettings):
