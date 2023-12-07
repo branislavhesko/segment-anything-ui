@@ -285,7 +285,7 @@ class Annotator:
     def merge_image_visualization(self):
         image = self.image.copy()
         if not len(self.masks):
-            return image
+            return crop_image(image, self.zoomed_bounding_box)
         visualization, border = self._visualize_mask()
         self.visualization = cv2.addWeighted(image, 0.8, visualization, 0.7, 0) * border[:, :, np.newaxis]
         return crop_image(self.visualization, self.zoomed_bounding_box)
