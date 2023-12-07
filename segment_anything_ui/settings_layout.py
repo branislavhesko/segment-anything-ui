@@ -4,7 +4,7 @@ import random
 
 import cv2
 import numpy as np
-from PySide6.QtWidgets import QPushButton, QWidget, QFileDialog, QVBoxLayout, QLineEdit, QLabel, QCheckBox
+from PySide6.QtWidgets import QPushButton, QWidget, QFileDialog, QVBoxLayout, QLineEdit, QLabel, QCheckBox, QMessageBox
 
 from segment_anything_ui.annotator import MasksAnnotation
 from segment_anything_ui.config import Config
@@ -76,6 +76,13 @@ class SettingsLayout(QWidget):
         self.layout.addWidget(self.show_image)
         self.layout.addWidget(self.show_visualization)
         self.files = FilesHolder()
+        self._is_saved = False
+
+    def confirm_next_file(self):
+            msgBox = QMessageBox().question(self, "Confirmation", "You have unsaved changes, do you want to go to the next file?",
+                                            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                                            QMessageBox.StandardButton.Yes)
+            return msgBox == QMessageBox.StandardButton.Yes
 
     def is_show_text(self):
         return self.show_text.isChecked()
@@ -84,10 +91,15 @@ class SettingsLayout(QWidget):
         self.parent().update(self.parent().annotator.merge_image_visualization())
 
     def on_next_file(self):
+        if not self._is_saved and not self.confirm_next_file():
+            return
+
         file = self.files.get_next()
         self._load_image(file)
 
     def on_previous_file(self):
+        if not self._is_saved and not self.confirm_next_file():
+            return
         file = self.files.get_previous()
         self._load_image(file)
 
@@ -113,6 +125,7 @@ class SettingsLayout(QWidget):
             self.parent().update(self.parent().annotator.merge_image_visualization())
         else:
             self.parent().update(image)
+        self._is_saved = False
 
     def _load_annotation(self, mask, labels):
         mask = cv2.imread(mask, cv2.IMREAD_UNCHANGED)
@@ -149,6 +162,7 @@ class SettingsLayout(QWidget):
             json.dump(labels, f, indent=4)
         masks = cv2.resize(masks, self.actual_shape, interpolation=cv2.INTER_NEAREST)
         cv2.imwrite(mask_path, masks)
+        self._is_saved = True
 
     def on_checkpoint_path_changed(self):
         self.parent().sam = self.parent().init_sam()
