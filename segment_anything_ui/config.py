@@ -42,4 +42,11 @@ class Config:
             self.window_size = (self.window_size, self.window_size)
 
     def get_sam_model_name(self):
-        return "_".join(os.path.basename(self.default_weights).split("_")[1:3])
+        if "l2" in self.default_weights:
+            return "l2"
+        if "vit_b" in self.default_weights:
+            return "vit_b"
+        if "vit_h" in self.default_weights:
+            return "vit_h"
+        if "vit_l" in self.default_weights:
+            return "vit_l"

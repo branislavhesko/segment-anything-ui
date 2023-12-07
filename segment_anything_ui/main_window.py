@@ -55,8 +55,13 @@ class SegmentAnythingUI(QWidget):
 
     def init_sam(self):
         try:
-            if "l2" in self.config.default_weights:
-                sam = create_sam_model("l2", pretrained=True, weight_url=str(self.settings.checkpoint_path.text()), image_size=1024)
+            if self.config.get_sam_model_name() == "l2":
+                sam = create_sam_model(
+                    self.config.get_sam_model_name(),
+                    pretrained=True,
+                    weight_url=str(self.settings.checkpoint_path.text()),
+                    image_size=1024
+                )
             else:
                 sam = sam_model_registry[self.config.get_sam_model_name()](checkpoint=str(self.settings.checkpoint_path.text()))
             sam.to(device=self.device)

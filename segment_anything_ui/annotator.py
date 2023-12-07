@@ -274,6 +274,9 @@ class Annotator:
         border = (border == 0).astype(np.uint8)
         return visualization, border
 
+    def has_annotations(self):
+        return len(self.masks) > 0
+
     def make_instance_mask(self):
         background = np.zeros_like(self.masks[0]) + 1
         mask_argmax = np.argmax(np.concatenate([np.expand_dims(background, 0), np.array(self.masks.masks)], axis=0), axis=0).astype(np.uint8)

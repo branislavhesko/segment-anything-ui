@@ -79,10 +79,11 @@ class SettingsLayout(QWidget):
         self._is_saved = False
 
     def confirm_next_file(self):
-            msgBox = QMessageBox().question(self, "Confirmation", "You have unsaved changes, do you want to go to the next file?",
-                                            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                                            QMessageBox.StandardButton.Yes)
-            return msgBox == QMessageBox.StandardButton.Yes
+        msgBox = QMessageBox().question(
+            self, "Confirmation", "You have unsaved changes, do you want to go to the next file?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.Yes)
+        return msgBox == QMessageBox.StandardButton.Yes
 
     def is_show_text(self):
         return self.show_text.isChecked()
@@ -91,14 +92,14 @@ class SettingsLayout(QWidget):
         self.parent().update(self.parent().annotator.merge_image_visualization())
 
     def on_next_file(self):
-        if not self._is_saved and not self.confirm_next_file():
+        if not self._is_saved and self.parent().annotator.has_annotations() and not self.confirm_next_file():
             return
 
         file = self.files.get_next()
         self._load_image(file)
 
     def on_previous_file(self):
-        if not self._is_saved and not self.confirm_next_file():
+        if not self._is_saved and self.parent().annotator.has_annotations() and not self.confirm_next_file():
             return
         file = self.files.get_previous()
         self._load_image(file)
