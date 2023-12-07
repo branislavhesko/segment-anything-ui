@@ -161,7 +161,7 @@ class SettingsLayout(QWidget):
         labels = self.parent().get_labels()
         with open(labels_path, "w") as f:
             json.dump(labels, f, indent=4)
-        masks = cv2.resize(masks, self.actual_shape, interpolation=cv2.INTER_NEAREST)
+        masks = cv2.resize(masks, self.actual_shape, interpolation=cv2.INTER_LINEAR)
         cv2.imwrite(mask_path, masks)
         self._is_saved = True
 

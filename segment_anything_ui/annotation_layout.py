@@ -170,7 +170,7 @@ class AnnotationLayout(QWidget):
             self.parent().update(self.parent().annotator.merge_image_visualization())
             self.zoom_flag = False
         else:
-            self.parent().info_label.setText("Zooming rectangle ON!")
+            self.parent().info_label.setText("Pick Mask to zoom!")
             self.zoom_rectangle.setText(f"Zoom Rectangle [ {self.config.key_mapping.ZOOM_RECTANGLE.name} ]")
             self.parent().image_label.change_paint_type(PaintType.ZOOM_PICKER)
             self.zoom_flag = True

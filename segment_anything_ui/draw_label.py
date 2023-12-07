@@ -128,15 +128,18 @@ class DrawLabel(QtWidgets.QLabel):
                 self.bounding_box.xend = cursor_event.pos().x()
                 self.bounding_box.yend = cursor_event.pos().y()
                 self.partial_box = BoundingBox(-1, -1, -1, -1)
+
+        if not self._paint_type == PaintType.MASK_PICKER and not self._paint_type == PaintType.ZOOM_PICKER:
+            self.parent().annotator.make_prediction(self.get_annotations())
+            self.parent().annotator.visualize_last_mask()
+
         if self._paint_type == PaintType.ZOOM_PICKER:
             self.parent().annotator.zoomed_bounding_box = self.bounding_box.scale(*self._get_scale()).to_int()
             self.bounding_box = None
             self.parent().annotator.make_embedding()
             self.parent().update(self.parent().annotator.merge_image_visualization())
+            self._paint_type = PaintType.POINT
 
-        if not self._paint_type == PaintType.MASK_PICKER and not self._paint_type == PaintType.ZOOM_PICKER:
-            self.parent().annotator.make_prediction(self.get_annotations())
-            self.parent().annotator.visualize_last_mask()
         self.update()
 
     def mousePressEvent(self, ev: PySide6.QtGui.QMouseEvent) -> None:
