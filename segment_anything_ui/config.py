@@ -32,7 +32,7 @@ class KeyBindings:
 
 @dataclasses.dataclass
 class Config:
-    default_weights: str = "sam_vit_h_4b8939.pth"
+    default_weights: str = "sam_vit_b_01ec64.pth"
     label_file: str = "labels.json"
     window_size: tuple[int, int] | int = (1920, 1080)
     key_mapping: KeyBindings = dataclasses.field(default_factory=KeyBindings)
