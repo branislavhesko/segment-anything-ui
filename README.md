@@ -22,19 +22,19 @@ Currently, for saving a simple format is used: mask is saved as .png file, when 
 # Functions
 There are multiple functions that this UI implements. Few of them are:
 
-    * Add points - by left click of mouse button, you can add a positive point. By right click, you can add a negative point.
-    * Add boxes - a bounding box can be added to SAM annotation when the proper annotation tool is selected. Manual points, boxes and polygons in the future are used for SAM prediction.
-    * Add manual polygons - by clicking in the image using left mouse button (and selected manual annotation) manual annotation is done. It does not provide any other features right now.
-    * Instance mask is saved by clicking on "Save Annotation" button.
-    * Annotate All - uses SAM to predict all masks by prompting the model with a grid of points followed by post-processing to refine masks.
-    * Pick Mask - Select a Mask from the image to delete it or inspect. Modifications are currently not allowed. As annotator allows multiple instances assigned to a pixel, Left clicking on the pixel cyclically changes between assigned masks.
-    * Each Instance mask is assigned a class according to the chosen label in the list. This list is loaded from labels.json file.
-    * Masks are inherently ordered based on the time of their creation, with earlier masks being dominant. Therefore masks that were annotated sooner are always present in the final mask, which is in form of an image with values 0 - N for N object instances. In the saved annotation, a pixel has only one value. A mask that is supposed to be used in the final annotation can be moved to the front by picking the desired mask and clicking on "Move Current Mask to Front" button. This is especially useful for "Annotate All" function.
-    * As each pixel can have multiple masks assigned, a lot of masks may be hidden. In this case only a few pixel could afterwards be present in the final annotation (mostly on the border) and therefore "Remove Hidden Masks" button can be used. This button removes all masks with hidden pixels (they are added later than the dominant mask) with a visible IOU less threshold.
-    * Masks annotations that have been "picked" can be deleted by Cancel current annotation button.
-    * Cancel annotation - Cancel current annotation - all points, bounding boxes etc...
-    * Partial mask - Some objects are hard to be automatically annotated - partial mask allows annotating a single instance by parts: each time a partial instance mask is annotated by clicking on the corresponding button the partial mask is enlarged and merged. Finally the final instance mask is given as a union of all partial masks.
-    * Zoom - With zoom tool a user can zoom onto some part of the image, annotate it and then this annotation is propagated to the whole image.
+ * Add points - by left click of mouse button, you can add a positive point. By right click, you can add a negative point.
+ * Add boxes - a bounding box can be added to SAM annotation when the proper annotation tool is selected. Manual points, boxes and polygons in the future are used for SAM prediction.
+ * Add manual polygons - by clicking in the image using left mouse button (and selected manual annotation) manual annotation is done. It does not provide any other features right now.
+ * Instance mask is saved by clicking on "Save Annotation" button.
+ * Annotate All - uses SAM to predict all masks by prompting the model with a grid of points followed by post-processing to refine masks.
+ * Pick Mask - Select a Mask from the image to delete it or inspect. Modifications are currently not allowed. As annotator allows multiple instances assigned to a pixel, Left clicking on the pixel cyclically changes between assigned masks.
+ * Each Instance mask is assigned a class according to the chosen label in the list. This list is loaded from labels.json file.
+ * Masks are inherently ordered based on the time of their creation, with earlier masks being dominant. Therefore masks that were annotated sooner are always present in the final mask, which is in form of an image with values 0 - N for N object instances. In the saved annotation, a pixel has only one value. A mask that is supposed to be used in the final annotation can be moved to the front by picking the desired mask and clicking on "Move Current Mask to Front" button. This is especially useful for "Annotate All" function.
+ * As each pixel can have multiple masks assigned, a lot of masks may be hidden. In this case only a few pixel could afterwards be present in the final annotation (mostly on the border) and therefore "Remove Hidden Masks" button can be used. This button removes all masks with hidden pixels (they are added later than the dominant mask) with a visible IOU less threshold.
+ * Masks annotations that have been "picked" can be deleted by Cancel current annotation button.
+ * Cancel annotation - Cancel current annotation - all points, bounding boxes etc...
+ * Partial mask - Some objects are hard to be automatically annotated - partial mask allows annotating a single instance by parts: each time a partial instance mask is annotated by clicking on the corresponding button the partial mask is enlarged and merged. Finally the final instance mask is given as a union of all partial masks.
+ * Zoom - With zoom tool a user can zoom onto some part of the image, annotate it and then this annotation is propagated to the whole image.
 
 
 
