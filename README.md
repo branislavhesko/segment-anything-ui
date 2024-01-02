@@ -35,6 +35,7 @@ There are multiple functions that this UI implements. Few of them are:
  * Cancel annotation - Cancel current annotation - all points, bounding boxes etc...
  * Partial mask - Some objects are hard to be automatically annotated - partial mask allows annotating a single instance by parts: each time a partial instance mask is annotated by clicking on the corresponding button the partial mask is enlarged and merged. Finally the final instance mask is given as a union of all partial masks.
  * Zoom - With zoom tool a user can zoom onto some part of the image, annotate it and then this annotation is propagated to the whole image.
+ * Tags - Each image can have a tag assigned to it. This tag is saved in the annotation file and can be used for filtering images. Use comma separated values for multiple tags.
 
 
 

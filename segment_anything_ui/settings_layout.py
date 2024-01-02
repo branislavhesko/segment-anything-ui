@@ -63,11 +63,14 @@ class SettingsLayout(QWidget):
         self.show_visualization.clicked.connect(self.on_show_visualization)
         self.show_text = QCheckBox("Show Text")
         self.show_text.clicked.connect(self.on_show_text)
+        self.tag_text_field = QLineEdit(self)
+        self.tag_text_field.setPlaceholderText("Comma separated image tags")
         self.layout.addWidget(self.open_files)
         self.layout.addWidget(self.next_file)
         self.layout.addWidget(self.previous_file)
         self.layout.addWidget(self.save_mask)
         self.layout.addWidget(self.show_text)
+        self.layout.addWidget(self.tag_text_field)
         self.layout.addWidget(self.checkpoint_path_label)
         self.layout.addWidget(self.checkpoint_path)
         self.checkpoint_path.returnPressed.connect(self.on_checkpoint_path_changed)
@@ -122,7 +125,14 @@ class SettingsLayout(QWidget):
             labels: dict[str, str] = json.load(fp)
         masks = []
         new_labels = []
-        for str_index, class_ in labels.items():
+        if "instances" in labels:
+            instance_labels = labels["instances"]
+        else:
+            instance_labels = labels
+
+        if "tags" in labels:
+            self.tag_text_field.setText(",".join(labels["tags"]))
+        for str_index, class_ in instance_labels.items():
             single_mask = np.zeros((mask.shape[0], mask.shape[1]), dtype=np.uint8)
             single_mask[mask == int(str_index)] = 255
             masks.append(single_mask)
@@ -140,11 +150,13 @@ class SettingsLayout(QWidget):
 
     def on_save_mask(self):
         path = os.path.split(self.actual_file)[0]
+        tags = self.tag_text_field.text().split(",")
+        tags = [tag.strip() for tag in tags]
         basename = os.path.splitext(os.path.basename(self.actual_file))[0]
         mask_path = os.path.join(path, basename + self.MASK_EXTENSION)
         labels_path = os.path.join(path, basename + self.LABELS_EXTENSION)
         masks = self.parent().get_mask()
-        labels = self.parent().get_labels()
+        labels = {"instances": self.parent().get_labels(), "tags": tags}
         with open(labels_path, "w") as f:
             json.dump(labels, f, indent=4)
         masks = cv2.resize(masks, self.actual_shape, interpolation=cv2.INTER_LINEAR)
