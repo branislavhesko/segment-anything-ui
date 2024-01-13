@@ -129,6 +129,8 @@ class SettingsLayout(QWidget):
             self.parent().info_label.setText("Loaded annotation from saved files!")
             self.parent().update(self.parent().annotator.merge_image_visualization())
         else:
+            self.parent().info_label.setText("No annotation found!")
+            self.tag_text_field.setText("")
             self.parent().update(image)
 
     def _load_annotation(self, mask, labels):
