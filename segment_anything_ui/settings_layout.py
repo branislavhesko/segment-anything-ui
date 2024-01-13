@@ -57,6 +57,8 @@ class SettingsLayout(QWidget):
         self.checkpoint_path = QLineEdit(self, text=self.parent().config.default_weights)
         self.precompute_button = QPushButton("Precompute all embeddings")
         self.precompute_button.clicked.connect(self.on_precompute)
+        self.delete_existing_annotation = QPushButton("Delete existing annotation")
+        self.delete_existing_annotation.clicked.connect(self.on_delete_existing_annotation)
         self.show_image = QPushButton("Show Image")
         self.show_visualization = QPushButton("Show Visualization")
         self.show_image.clicked.connect(self.on_show_image)
@@ -69,6 +71,7 @@ class SettingsLayout(QWidget):
         self.layout.addWidget(self.next_file)
         self.layout.addWidget(self.previous_file)
         self.layout.addWidget(self.save_mask)
+        self.layout.addWidget(self.delete_existing_annotation)
         self.layout.addWidget(self.show_text)
         self.layout.addWidget(self.tag_text_field)
         self.layout.addWidget(self.checkpoint_path_label)
@@ -79,6 +82,16 @@ class SettingsLayout(QWidget):
         self.layout.addWidget(self.show_image)
         self.layout.addWidget(self.show_visualization)
         self.files = FilesHolder()
+
+    def on_delete_existing_annotation(self):
+        path = os.path.split(self.actual_file)[0]
+        basename = os.path.splitext(os.path.basename(self.actual_file))[0]
+        mask_path = os.path.join(path, basename + self.MASK_EXTENSION)
+        labels_path = os.path.join(path, basename + self.LABELS_EXTENSION)
+        if os.path.exists(mask_path):
+            os.remove(mask_path)
+        if os.path.exists(labels_path):
+            os.remove(labels_path)
 
     def is_show_text(self):
         return self.show_text.isChecked()
@@ -113,6 +126,7 @@ class SettingsLayout(QWidget):
         self.parent().set_image(image)
         if os.path.exists(mask) and os.path.exists(labels):
             self._load_annotation(mask, labels)
+            self.parent().info_label.setText("Loaded annotation from saved files!")
             self.parent().update(self.parent().annotator.merge_image_visualization())
         else:
             self.parent().update(image)
