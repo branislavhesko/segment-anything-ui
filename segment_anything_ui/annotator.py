@@ -4,6 +4,7 @@ from typing import Callable
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit
 from segment_anything import SamPredictor, automatic_mask_generator
 from segment_anything.build_sam import Sam
@@ -64,8 +65,10 @@ class LabelValueParam(QWidget):
     def __init__(self, label_text, default_value, value_type_converter: Callable = lambda x: x, parent=None):
         super().__init__(parent)
         self.layout = QVBoxLayout(self)
-        self.label = QLabel(self, text=label_text)
-        self.value = QLineEdit(self, text=default_value)
+        self.layout.setSpacing(0)
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.label = QLabel(self, text=label_text, alignment=Qt.AlignCenter)
+        self.value = QLineEdit(self, text=default_value, alignment=Qt.AlignCenter)
         self.layout.addWidget(self.label)
         self.layout.addWidget(self.value)
         self.converter = value_type_converter
@@ -79,6 +82,8 @@ class CustomForm(QWidget):
     def __init__(self, parent: QWidget, automatic_mask_generator_settings: AutomaticMaskGeneratorSettings) -> None:
         super().__init__(parent)
         self.layout = QVBoxLayout(self)
+        self.layout.setSpacing(0)
+        self.layout.setContentsMargins(0, 0, 0, 0)
         self.widgets = []
 
         for field in dataclasses.fields(automatic_mask_generator_settings):
