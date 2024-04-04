@@ -33,9 +33,9 @@ class SegmentAnythingUI(QWidget):
         self.sam = self.init_sam()
         self.annotator = Annotator(sam=self.sam, parent=self)
         self.annotation_layout = AnnotationLayout(self, config=self.config)
-        self.layout.addWidget(self.annotation_layout, 0, 0)
-        self.layout.addWidget(self.image_label, 0, 1)
-        self.layout.addWidget(self.settings, 0, 2)
+        self.layout.addWidget(self.annotation_layout, 0, 0, 1, 1, Qt.AlignCenter)
+        self.layout.addWidget(self.image_label, 0, 1, 2, 2, Qt.AlignCenter)
+        self.layout.addWidget(self.settings, 0, 3, 1, 1, Qt.AlignCenter)
         self.layout.addWidget(self.info_label, 1, 1)
 
         self.set_image(np.zeros((self.config.window_size[1], self.config.window_size[0], 3), dtype=np.uint8))
