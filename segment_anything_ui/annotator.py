@@ -261,6 +261,8 @@ class Annotator:
                 single_mask, np.ones((3, 3), np.uint8), iterations=1)
             label = self.masks.get_label(i)
             single_mask_center = np.mean(np.where(single_mask == 1), axis=1)
+            if np.isnan(single_mask_center).any():
+                continue
             if self.parent.settings.is_show_text():
                 cv2.putText(
                     visualization,

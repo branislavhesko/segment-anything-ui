@@ -148,6 +148,8 @@ class SettingsLayout(QWidget):
 
         if "tags" in labels:
             self.tag_text_field.setText(",".join(labels["tags"]))
+        else:
+            self.tag_text_field.setText("")
         for str_index, class_ in instance_labels.items():
             single_mask = np.zeros((mask.shape[0], mask.shape[1]), dtype=np.uint8)
             single_mask[mask == int(str_index)] = 255
