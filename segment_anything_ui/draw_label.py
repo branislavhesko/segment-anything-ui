@@ -115,6 +115,15 @@ class DrawLabel(QtWidgets.QLabel):
             self.partial_box.yend = ev.pos().y()
             self.update()
 
+        if self._paint_type == PaintType.POINT:
+            point = ev.pos()
+            temporary_point_positive = point
+            temporary_point_negative = None
+            annotations = self.get_annotations(temporary_point_positive, temporary_point_negative)
+            self.parent().annotator.make_prediction(annotations)
+            self.parent().annotator.visualize_last_mask()
+        self.update()
+
     def mouseReleaseEvent(self, cursor_event):
         if self._paint_type == PaintType.POINT:
             if cursor_event.button() == QtCore.Qt.LeftButton:
@@ -188,15 +197,25 @@ class DrawLabel(QtWidgets.QLabel):
     def _get_scale(self):
         return self.config.window_size[0] / self.size().width(), self.config.window_size[1] / self.size().height()
 
-    def get_annotations(self):
+    def get_annotations(
+            self, 
+            temporary_point_positive: PySide6.QtCore.QPoint | None = None, 
+            temporary_point_negative: PySide6.QtCore.QPoint | None = None
+        ):
         sx, sy = self._get_scale()
         positive_points = [(
             p.x() * sx,
             p.y() * sy) for p in self.positive_points]
-        positive_points = np.array(positive_points).reshape(-1, 2)
         negative_points = [(
             p.x() * sx,
             p.y() * sy) for p in self.negative_points]
+        
+        if temporary_point_positive:
+            positive_points += [(temporary_point_positive.x() * sx, temporary_point_positive.y() * sy)]
+        if temporary_point_negative:
+            negative_points += [(temporary_point_negative.x() * sx, temporary_point_negative.y() * sy)]
+        
+        positive_points = np.array(positive_points).reshape(-1, 2)
         negative_points = np.array(negative_points).reshape(-1, 2)
         labels = np.array([1, ] * len(positive_points) + [0, ] * len(negative_points))
         print(f"Positive points: {positive_points}")
