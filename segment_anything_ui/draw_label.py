@@ -117,12 +117,18 @@ class DrawLabel(QtWidgets.QLabel):
 
         if self._paint_type == PaintType.POINT:
             point = ev.pos()
-            temporary_point_positive = point
-            temporary_point_negative = None
-            annotations = self.get_annotations(temporary_point_positive, temporary_point_negative)
-            self.parent().annotator.make_prediction(annotations)
-            self.parent().annotator.visualize_last_mask()
+            if ev.buttons() == QtCore.Qt.LeftButton:
+                self._move_update(None, point)
+            elif ev.buttons() == QtCore.Qt.RightButton:
+                self._move_update(point, None)
+            else:
+                pass
         self.update()
+
+    def _move_update(self, temporary_point_negative, temporary_point_positive):
+        annotations = self.get_annotations(temporary_point_positive, temporary_point_negative)
+        self.parent().annotator.make_prediction(annotations)
+        self.parent().annotator.visualize_last_mask()
 
     def mouseReleaseEvent(self, cursor_event):
         if self._paint_type == PaintType.POINT:
@@ -178,6 +184,12 @@ class DrawLabel(QtWidgets.QLabel):
             self.parent().annotator.masks.mask_id = mask_id
             self.parent().annotator.last_mask = local_mask
             self.parent().annotator.visualize_last_mask(label)
+        if self._paint_type == PaintType.POINT:
+            point = ev.pos()
+            if ev.button() == QtCore.Qt.LeftButton:
+                self._move_update(None, point)
+            if ev.button() == QtCore.Qt.RightButton:
+                self._move_update(point, None)
         self.update()
 
     def zoom_to_rectangle(self, xstart, ystart, xend, yend):
