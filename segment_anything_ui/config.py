@@ -32,14 +32,22 @@ class KeyBindings:
 
 @dataclasses.dataclass
 class Config:
-    default_weights: str = "sam_vit_h_4b8939.pth"
+    default_weights: str = "sam_vit_b_01ec64.pth"
+    download_weights_if_not_available: bool = True
     label_file: str = "labels.json"
-    window_size: tuple[int, int] | int = (1280, 1280)
+    window_size: tuple[int, int] | int = (1920, 1080)
     key_mapping: KeyBindings = dataclasses.field(default_factory=KeyBindings)
-
+    weights_paths: dict[str, str] = dataclasses.field(default_factory=lambda: {
+        "l2": "https://huggingface.co/han-cai/efficientvit-sam/resolve/main/l2.pt",
+        "vit_b": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth",
+        "vit_h": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth",
+        "vit_l": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_l_0b3195.pth",
+    })
     def __post_init__(self):
         if isinstance(self.window_size, int):
             self.window_size = (self.window_size, self.window_size)
+        if self.download_weights_if_not_available:
+            self.download_weights()
 
     def get_sam_model_name(self):
         if "l2" in self.default_weights:
