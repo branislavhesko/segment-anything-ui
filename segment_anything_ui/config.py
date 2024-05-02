@@ -3,11 +3,32 @@ import os
 
 from PySide6.QtCore import Qt
 import requests
+try:
+    from tqdm import tqdm
+    import wget
+except ImportError:
+    print("Tqdm and wget not found. Install with pip install tqdm wget")
+    tqdm = None
+    wget = None
+
 
 @dataclasses.dataclass(frozen=True)
 class Keymap:
     key: Qt.Key | str
     name: str
+
+
+class ProgressBar:
+    def __init__(self):
+        self.progress_bar = None
+
+    def __call__(self, current_bytes, total_bytes, width):
+        current_mb = round(current_bytes / 1024 ** 2, 1)
+        total_mb = round(total_bytes / 1024 ** 2, 1)
+        if self.progress_bar is None:
+            self.progress_bar = tqdm(total=total_mb, desc="MB")
+        delta_mb = current_mb - self.progress_bar.n
+        self.progress_bar.update(delta_mb)
 
 
 @dataclasses.dataclass
@@ -43,6 +64,7 @@ class Config:
         "vit_h": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth",
         "vit_l": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_l_0b3195.pth",
     })
+
     def __post_init__(self):
         if isinstance(self.window_size, int):
             self.window_size = (self.window_size, self.window_size)
@@ -62,9 +84,15 @@ class Config:
 
     def download_weights(self):
         if not os.path.exists(self.default_weights):
-            model_name = self.get_sam_model_name()
-            print(f"Downloading weights for model {model_name}")
-            file = requests.get(self.weights_paths[model_name])
-            with open(self.default_weights, "wb") as f:
-                f.write(file.content)
-            print(f"Downloaded weights to {self.default_weights}")
+            try:
+                print(f"Downloading weights for model {self.get_sam_model_name()}")
+                wget.download(self.weights_paths[self.get_sam_model_name()], self.default_weights, bar=ProgressBar())
+                print(f"Downloaded weights to {self.default_weights}")
+            except Exception as e:
+                print(f"Error downloading weights: {e}. Trying with requests.")
+                model_name = self.get_sam_model_name()
+                print(f"Downloading weights for model {model_name}")
+                file = requests.get(self.weights_paths[model_name])
+                with open(self.default_weights, "wb") as f:
+                    f.write(file.content)
+                print(f"Downloaded weights to {self.default_weights}")

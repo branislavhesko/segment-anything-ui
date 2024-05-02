@@ -6,3 +6,5 @@ numpy
 segment-anything
 matplotlib
 scikit-image
+tqdm
+wget
