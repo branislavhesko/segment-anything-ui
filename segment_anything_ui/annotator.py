@@ -8,10 +8,11 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit
 from segment_anything import SamPredictor, automatic_mask_generator
 from segment_anything.build_sam import Sam
+from segment_anything_ui.model_builder import (
+    get_predictor, get_mask_generator, EfficientViTSamPredictor, SamPredictor, EfficientViTSam)
 from skimage.measure import regionprops
 import torch
 
-from segment_anything_ui.modeling.efficientvit.models.efficientvit.sam import EfficientViTSam, EfficientViTSamPredictor
 from segment_anything_ui.utils.shapes import BoundingBox
 
 
@@ -166,7 +167,7 @@ class MasksAnnotation:
 
 @dataclasses.dataclass()
 class Annotator:
-    sam: Sam | None = None
+    sam: Sam | EfficientViTSam | None = None
     embedding: torch.Tensor | None = None
     image: np.ndarray | None = None
     masks: MasksAnnotation = dataclasses.field(default_factory=MasksAnnotation)
@@ -191,14 +192,11 @@ class Annotator:
     def make_embedding(self):
         if self.sam is None:
             return
-        if isinstance(self.sam, EfficientViTSam):
-            self.predictor = EfficientViTSamPredictor(self.sam)
-        else:
-            self.predictor = SamPredictor(self.sam)
+        self.predictor = get_predictor(self.sam)
         self.predictor.set_image(crop_image(self.image, self.zoomed_bounding_box))
 
     def predict_all(self, settings: AutomaticMaskGeneratorSettings):
-        generator = automatic_mask_generator.SamAutomaticMaskGenerator(
+        generator = get_mask_generator(
             model=self.sam,
             **dataclasses.asdict(settings)
         )
