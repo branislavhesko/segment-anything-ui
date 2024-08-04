@@ -53,7 +53,7 @@ class KeyBindings:
 
 @dataclasses.dataclass
 class Config:
-    default_weights: str = "sam_vit_b_01ec64.pth"
+    default_weights: str = "xl0.pt"
     download_weights_if_not_available: bool = True
     label_file: str = "labels.json"
     window_size: tuple[int, int] | int = (1920, 1080)
@@ -63,6 +63,8 @@ class Config:
         "vit_b": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth",
         "vit_h": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth",
         "vit_l": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_l_0b3195.pth",
+        "xl0": "https://huggingface.co/mit-han-lab/efficientvit-sam/blob/main/xl0.pt",
+        "xl1": "https://huggingface.co/mit-han-lab/efficientvit-sam/blob/main/xl1.pt",
     })
 
     def __post_init__(self):
@@ -80,6 +82,10 @@ class Config:
             return "vit_h"
         if "vit_l" in self.default_weights:
             return "vit_l"
+        if "xl0" in self.default_weights:
+            return "xl0"
+        if "xl1" in self.default_weights:
+            return "xl1"
         raise ValueError("Unknown model name")
 
     def download_weights(self):

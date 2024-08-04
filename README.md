@@ -12,10 +12,11 @@ Segment anything UI for annotations
  1. Install segment-anything python package from Github: [Segment anything](https://github.com/facebookresearch/segment-anything). Usually it is enough to run: ```pip install git+https://github.com/facebookresearch/segment-anything.git```.
  2. Download checkpoint [Checkpoint_Huge](https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth) or [Checkpoint_Large](https://dl.fbaipublicfiles.com/segment_anything/sam_vit_l_0b3195.pth) or [Checkpoint_Base](https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth) and put it into workspace folder.
  3. Fill default_path in ```segment_anything_ui/config.py```.
- 4. Install requirements.txt. ```pip install -r requirements.txt```.
- 5. If on Ubuntu or Debian based distro, please use the following ```apt install libxkbcommon-x11-0 qt5dxcb-plugin libxcb-cursor0```. This will fix issues with Qt.
- 6. ```export PYTHONPATH=$PYTHONPATH:.```.
- 7. ```python segment_anything_ui/main_window.py```.
+ 4. Install efficientnet models ```pip install git+https://github.com/mit-han-lab/efficientvit```.
+ 5. Install requirements.txt. ```pip install -r requirements.txt```.
+ 6. If on Ubuntu or Debian based distro, please use the following ```apt install libxkbcommon-x11-0 qt5dxcb-plugin libxcb-cursor0```. This will fix issues with Qt.
+ 7. ```export PYTHONPATH=$PYTHONPATH:.```.
+ 8. ```python segment_anything_ui/main_window.py```.
 
 Currently, for saving a simple format is used: mask is saved as .png file, when masks are represented by values: 1 ... n and corresponding labels are saved as jsons. In json, labels are a map with mapping: MASK_ID: LABEL. MASK_ID is the id of the stored mask and LABEL is one of "labels.json" files.
 

@@ -1,3 +1,4 @@
+import logging
 import sys
 
 import cv2
@@ -6,14 +7,13 @@ import torch
 from PySide6.QtWidgets import (QApplication, QGridLayout, QLabel,
                                QMessageBox, QWidget)
 from PySide6.QtCore import Qt
-from segment_anything import sam_model_registry
 
 from segment_anything_ui.annotator import Annotator
 from segment_anything_ui.annotation_layout import AnnotationLayout
 from segment_anything_ui.config import Config
 from segment_anything_ui.draw_label import DrawLabel
 from segment_anything_ui.image_pixmap import ImagePixmap
-from segment_anything_ui.modeling.efficientvit.sam_model_zoo import create_sam_model
+from segment_anything_ui.model_builder import build_model
 from segment_anything_ui.settings_layout import SettingsLayout
 
 
@@ -55,18 +55,10 @@ class SegmentAnythingUI(QWidget):
 
     def init_sam(self):
         try:
-            if self.config.get_sam_model_name() == "l2":
-                sam = create_sam_model(
-                    self.config.get_sam_model_name(),
-                    pretrained=True,
-                    weight_url=str(self.settings.checkpoint_path.text()),
-                    image_size=1024
-                )
-            else:
-                sam = sam_model_registry[self.config.get_sam_model_name()](checkpoint=str(self.settings.checkpoint_path.text()))
-            sam.to(device=self.device)
+            checkpoint_path = str(self.settings.checkpoint_path.text())
+            sam = build_model(self.config.get_sam_model_name(), checkpoint_path, self.device)
         except Exception as e:
-            print(e)
+            logging.getLogger().exception(f"Error loading model: {e}")
             QMessageBox.critical(self, "Error", "Could not load model")
             return None
         return sam
