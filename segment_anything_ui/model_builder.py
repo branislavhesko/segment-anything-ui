@@ -1,5 +1,11 @@
-from efficientvit.sam_model_zoo import create_sam_model, EfficientViTSam
-from efficientvit.models.efficientvit.sam import EfficientViTSamPredictor, EfficientViTSamAutomaticMaskGenerator
+try:
+    from efficientvit.sam_model_zoo import create_sam_model, EfficientViTSam
+    from efficientvit.models.efficientvit.sam import EfficientViTSamPredictor, EfficientViTSamAutomaticMaskGenerator
+    IS_EFFICIENT_VIT_AVAILABLE = True
+except (ModuleNotFoundError, ImportError) as e:
+    import logging
+    logging.warning("Efficient is not available, please install the package from https://github.com/mit-han-lab/efficientvit/tree/master .")
+    IS_EFFICIENT_VIT_AVAILABLE = False
 
 from segment_anything import sam_model_registry
 from segment_anything import SamPredictor, automatic_mask_generator
