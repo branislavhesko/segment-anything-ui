@@ -6,10 +6,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit
-from segment_anything import SamPredictor, automatic_mask_generator
+from segment_anything import SamPredictor
 from segment_anything.build_sam import Sam
 from segment_anything_ui.model_builder import (
-    get_predictor, get_mask_generator, EfficientViTSamPredictor, SamPredictor, EfficientViTSam)
+    get_predictor, get_mask_generator, SamPredictor)
 try:
     from segment_anything_ui.model_builder import EfficientViTSamPredictor, EfficientViTSam
 except (ImportError, ModuleNotFoundError):
