@@ -12,13 +12,20 @@ Segment anything UI for annotations
  1. Install segment-anything python package from Github: [Segment anything](https://github.com/facebookresearch/segment-anything). Usually it is enough to run: ```pip install git+https://github.com/facebookresearch/segment-anything.git```.
  2. Download checkpoint [Checkpoint_Huge](https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth) or [Checkpoint_Large](https://dl.fbaipublicfiles.com/segment_anything/sam_vit_l_0b3195.pth) or [Checkpoint_Base](https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth) and put it into workspace folder.
  3. Fill default_path in ```segment_anything_ui/config.py```.
- 4. Install efficientnet models ```pip install git+https://github.com/mit-han-lab/efficientvit```.
+ 4. Install efficientnet models ```pip install git+https://github.com/mit-han-lab/efficientvit```. See note below for Windows users about installing onnx!
  5. Install requirements.txt. ```pip install -r requirements.txt```.
  6. If on Ubuntu or Debian based distro, please use the following ```apt install libxkbcommon-x11-0 qt5dxcb-plugin libxcb-cursor0```. This will fix issues with Qt.
  7. ```export PYTHONPATH=$PYTHONPATH:.```.
  8. ```python segment_anything_ui/main_window.py```.
 
 Currently, for saving a simple format is used: mask is saved as .png file, when masks are represented by values: 1 ... n and corresponding labels are saved as jsons. In json, labels are a map with mapping: MASK_ID: LABEL. MASK_ID is the id of the stored mask and LABEL is one of "labels.json" files.
+
+``` 
+For windows users, sometimes you will observe onnx used in EfficientVit is not easy to install using pip. In that case, it may be caused by
+https://stackoverflow.com/questions/72352528/how-to-fix-winerror-206-the-filename-or-extension-is-too-long-error/76452218#76452218
+
+To fix this error on your Windows machine on regedit and navigate to Computer\HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem and edit LongPathsEnabled and set value from 0 to 1
+```
 
 # Functions
 There are multiple functions that this UI implements. Few of them are:
