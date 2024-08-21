@@ -31,7 +31,7 @@ def build_model(model_name: str, checkpoint_path: str, device: str):
         
         
 def get_predictor(sam):
-    if isinstance(sam):
+    if isinstance(sam, EfficientViTSam):
         return EfficientViTSamPredictor(sam)
     elif isinstance(sam, Sam):
         return SamPredictor(sam)
