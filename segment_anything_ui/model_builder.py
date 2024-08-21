@@ -30,15 +30,15 @@ def build_model(model_name: str, checkpoint_path: str, device: str):
             raise ValueError(f"Model {model_name} not supported")
         
         
-def get_predictor(sam: EfficientViTSam):
-    if isinstance(sam, EfficientViTSam):
+def get_predictor(sam):
+    if isinstance(sam):
         return EfficientViTSamPredictor(sam)
     elif isinstance(sam, Sam):
         return SamPredictor(sam)
     else:
         raise ValueError("Model is not an EfficientViTSam or Sam")
     
-def get_mask_generator(sam: EfficientViTSam, **kwargs):
+def get_mask_generator(sam, **kwargs):
     if isinstance(sam, EfficientViTSam):
         return EfficientViTSamAutomaticMaskGenerator(model=sam, **kwargs)
     elif isinstance(sam, Sam):
