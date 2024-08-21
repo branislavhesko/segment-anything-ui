@@ -1,5 +1,6 @@
 import dataclasses
 import os
+from typing import Literal
 
 from PySide6.QtCore import Qt
 import requests
@@ -53,7 +54,14 @@ class KeyBindings:
 
 @dataclasses.dataclass
 class Config:
-    default_weights: str = "xl0.pt"
+    default_weights: Literal[
+        "sam_vit_b_01ec64.pth", 
+        "sam_vit_h_4b8939.pth", 
+        "sam_vit_l_0b3195.pth", 
+        "xl0.pt", 
+        "xl1.pt", 
+        "PATH_TO_YOUR_CHECKPOINT"
+    ] = "xl0.pt"
     download_weights_if_not_available: bool = True
     label_file: str = "labels.json"
     window_size: tuple[int, int] | int = (1920, 1080)

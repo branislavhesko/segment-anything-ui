@@ -24,7 +24,8 @@ Currently, for saving a simple format is used: mask is saved as .png file, when 
 For windows users, sometimes you will observe onnx used in EfficientVit is not easy to install using pip. In that case, it may be caused by
 https://stackoverflow.com/questions/72352528/how-to-fix-winerror-206-the-filename-or-extension-is-too-long-error/76452218#76452218
 
-To fix this error on your Windows machine on regedit and navigate to Computer\HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem and edit LongPathsEnabled and set value from 0 to 1
+To fix this error on your Windows machine on regedit and navigate to 
+Computer\HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem and edit LongPathsEnabled and set value from 0 to 1
 ```
 
 # Functions
