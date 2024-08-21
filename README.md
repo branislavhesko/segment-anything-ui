@@ -26,6 +26,9 @@ https://stackoverflow.com/questions/72352528/how-to-fix-winerror-206-the-filenam
 
 To fix this error on your Windows machine on regedit and navigate to 
 Computer\HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem and edit LongPathsEnabled and set value from 0 to 1
+
+Finally, fix onnx version, newest version seems to be broken
+pip install onnx==1.15.0
 ```
 
 # Functions

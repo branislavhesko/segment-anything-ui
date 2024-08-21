@@ -206,7 +206,7 @@ class Annotator:
 
     def predict_all(self, settings: AutomaticMaskGeneratorSettings):
         generator = get_mask_generator(
-            model=self.sam,
+            sam=self.sam,
             **dataclasses.asdict(settings)
         )
         masks = generator.generate(self.image)
