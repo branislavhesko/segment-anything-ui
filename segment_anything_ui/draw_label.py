@@ -144,7 +144,9 @@ class DrawLabel(QtWidgets.QLabel):
                 self.bounding_box.yend = cursor_event.pos().y()
                 self.partial_box = BoundingBox(-1, -1, -1, -1)
 
-        if not self._paint_type == PaintType.MASK_PICKER and not self._paint_type == PaintType.ZOOM_PICKER:
+        if not self._paint_type == PaintType.MASK_PICKER and \
+                not self._paint_type == PaintType.ZOOM_PICKER and \
+                not self._paint_type == PaintType.POLYGON:
             self.parent().annotator.make_prediction(self.get_annotations())
             self.parent().annotator.visualize_last_mask()
 

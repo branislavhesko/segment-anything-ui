@@ -119,6 +119,7 @@ class SettingsLayout(QWidget):
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         if image.dtype in [np.float32, np.float64, np.uint16]:
             image = (image / np.amax(image) * 255).astype("uint8")
+        #image = np.expand_dims(image[:, :, 2], axis=-1).repeat(3, axis=-1)
         image = cv2.resize(image,
                            (int(self.parent().config.window_size[0]), self.parent().config.window_size[1]))
         self.parent().annotator.clear()
