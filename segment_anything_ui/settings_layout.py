@@ -1,5 +1,6 @@
 import json
 import os
+import pathlib
 import random
 
 import cv2
@@ -35,6 +36,7 @@ class FilesHolder:
 class SettingsLayout(QWidget):
     MASK_EXTENSION = "_mask.png"
     LABELS_EXTENSION = "_labels.json"
+    BOUNDING_BOXES_EXTENSION = "_bounding_boxes.json"
 
     def __init__(self, parent, config: Config) -> None:
         super().__init__(parent)
@@ -50,6 +52,9 @@ class SettingsLayout(QWidget):
         self.save_mask = QPushButton(f"Save Mask [ {config.key_mapping.SAVE_MASK.name} ]")
         self.save_mask.clicked.connect(self.on_save_mask)
         self.save_mask.setShortcut(config.key_mapping.SAVE_MASK.key)
+        self.save_bounding_boxes = QPushButton(f"Save Bounding Boxes [ {config.key_mapping.SAVE_BOUNDING_BOXES.name} ]")
+        self.save_bounding_boxes.clicked.connect(self.on_save_bounding_boxes)
+        self.save_bounding_boxes.setShortcut(config.key_mapping.SAVE_BOUNDING_BOXES.key)
         self.next_file.clicked.connect(self.on_next_file)
         self.next_file.setShortcut(config.key_mapping.NEXT_FILE.key)
         self.previous_file.clicked.connect(self.on_previous_file)
@@ -61,6 +66,8 @@ class SettingsLayout(QWidget):
         self.delete_existing_annotation.clicked.connect(self.on_delete_existing_annotation)
         self.show_image = QPushButton("Show Image")
         self.show_visualization = QPushButton("Show Visualization")
+        self.show_bounding_boxes = QCheckBox("Show Bounding Boxes")
+        self.show_bounding_boxes.clicked.connect(self.on_show_bounding_boxes)
         self.show_image.clicked.connect(self.on_show_image)
         self.show_visualization.clicked.connect(self.on_show_visualization)
         self.show_text = QCheckBox("Show Text")
@@ -71,8 +78,10 @@ class SettingsLayout(QWidget):
         self.layout.addWidget(self.next_file)
         self.layout.addWidget(self.previous_file)
         self.layout.addWidget(self.save_mask)
+        self.layout.addWidget(self.save_bounding_boxes)
         self.layout.addWidget(self.delete_existing_annotation)
         self.layout.addWidget(self.show_text)
+        self.layout.addWidget(self.show_bounding_boxes)
         self.layout.addWidget(self.tag_text_field)
         self.layout.addWidget(self.checkpoint_path_label)
         self.layout.addWidget(self.checkpoint_path)
@@ -189,3 +198,18 @@ class SettingsLayout(QWidget):
         random.shuffle(files)
         self.files.add_files(files)
         self.on_next_file()
+        
+    def on_save_bounding_boxes(self):
+        path = os.path.split(self.actual_file)[0]
+        basename = pathlib.Path(self.actual_file).stem
+        bounding_boxes_path = os.path.join(path, basename + self.BOUNDING_BOXES_EXTENSION)
+        bounding_boxes = self.parent().get_bounding_boxes()
+        bounding_boxes_dict = [bounding_box.to_dict() for bounding_box in bounding_boxes]
+        with open(bounding_boxes_path, "w") as f:
+            json.dump(bounding_boxes_dict, f, indent=4)
+   
+    def is_show_bounding_boxes(self):
+        return self.show_bounding_boxes.isChecked()
+    
+    def on_show_bounding_boxes(self):
+        self.parent().update(self.parent().annotator.merge_image_visualization())

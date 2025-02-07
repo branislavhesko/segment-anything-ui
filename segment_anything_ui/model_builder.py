@@ -15,6 +15,8 @@ from segment_anything.build_sam import Sam
 def build_model(model_name: str, checkpoint_path: str, device: str):
     match model_name:
         case "xl0" | "xl1":
+            if not IS_EFFICIENT_VIT_AVAILABLE:
+                raise ValueError("EfficientViTSam is not available, please install the package from https://github.com/mit-han-lab/efficientvit/tree/master .")
             efficientvit_sam = create_efficientvit_sam_model(
                 name=model_name, weight_url=checkpoint_path,
             )

@@ -23,7 +23,7 @@ from skimage.measure import regionprops
 import torch
 
 from segment_anything_ui.utils.shapes import BoundingBox
-
+from segment_anything_ui.utils.bounding_boxes import get_bounding_boxes, get_mask_bounding_box
 
 def get_cmap(n, name='hsv'):
     '''Returns a function that maps each index in 0, 1, ..., n-1 to a distinct
@@ -258,6 +258,24 @@ class Annotator:
                 [255, 255, 255],
                 2
             )
+        if self.is_show_bounding_boxes:
+            last_mask_bounding_boxes = get_mask_bounding_box(last_mask[:, :, 1], label)
+            cv2.rectangle(
+                last_mask,
+                (int(last_mask_bounding_boxes.x_min * self.image.shape[1]), int(last_mask_bounding_boxes.y_min * self.image.shape[0])),
+                (int(last_mask_bounding_boxes.x_max * self.image.shape[1]), int(last_mask_bounding_boxes.y_max * self.image.shape[0])),
+                (0, 255, 0),
+                2
+            )
+            cv2.putText(
+                last_mask,
+                label,
+                (int(last_mask_bounding_boxes.x_min * self.image.shape[1]), int(last_mask_bounding_boxes.y_min * self.image.shape[0])),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                1.0,
+                [255, 255, 255],
+                2
+            )
         visualization = cv2.addWeighted(self.image.copy() if self.visualization is None else self.visualization.copy(),
                                         0.8, last_mask, 0.5, 0)
         self.parent.update(crop_image(visualization, self.zoomed_bounding_box))
@@ -287,6 +305,25 @@ class Annotator:
                     [255, 255, 255],
                     1
                 )
+            if self.is_show_bounding_boxes:
+                bounding_boxes = self.get_bounding_boxes()
+                for bounding_box in bounding_boxes:
+                    cv2.rectangle(
+                        visualization,
+                        (int(bounding_box.x_min * self.image.shape[1]), int(bounding_box.y_min * self.image.shape[0])),
+                        (int(bounding_box.x_max * self.image.shape[1]), int(bounding_box.y_max * self.image.shape[0])),
+                        (0, 255, 0),
+                        2
+                    )
+                    cv2.putText(
+                        visualization,
+                        bounding_box.label,
+                        (int(bounding_box.x_min * self.image.shape[1]), int(bounding_box.y_min * self.image.shape[0])),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        1.0,
+                        [255, 255, 255],
+                        2
+                    )
         border = (border == 0).astype(np.uint8)
         return visualization, border
 
@@ -297,6 +334,9 @@ class Annotator:
         background = np.zeros_like(self.masks[0]) + 1
         mask_argmax = np.argmax(np.concatenate([np.expand_dims(background, 0), np.array(self.masks.masks)], axis=0), axis=0).astype(np.uint8)
         return mask_argmax
+    
+    def get_bounding_boxes(self):
+        return get_bounding_boxes(self.masks.masks, self.masks.label_map.values())
 
     def merge_image_visualization(self):
         image = self.image.copy()
@@ -322,6 +362,10 @@ class Annotator:
         if len(self.masks) >= self.MAX_MASKS:
             self.MAX_MASKS += 10
             self.cmap = get_cmap(self.MAX_MASKS)
+        
+    @property
+    def is_show_bounding_boxes(self):
+        return self.parent.settings.is_show_bounding_boxes()
 
     def clear_last_masks(self):
         self.last_mask = None

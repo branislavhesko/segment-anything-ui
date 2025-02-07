@@ -68,6 +68,9 @@ class SegmentAnythingUI(QWidget):
 
     def get_labels(self):
         return self.annotator.make_labels()
+    
+    def get_bounding_boxes(self):
+        return self.annotator.get_bounding_boxes()
 
 
 if __name__ == '__main__':

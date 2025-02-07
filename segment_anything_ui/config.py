@@ -44,7 +44,7 @@ class KeyBindings:
     MERGE_MASK: Keymap = Keymap(Qt.Key.Key_Z, "Z")
     DELETE_MASK: Keymap = Keymap(Qt.Key.Key_V, "V")
     PARTIAL_ANNOTATION: Keymap = Keymap(Qt.Key.Key_D, "D")
-
+    SAVE_BOUNDING_BOXES: Keymap = Keymap("Ctrl+B", "Ctrl+B")
     NEXT_FILE: Keymap = Keymap(Qt.Key.Key_F, "F")
     PREVIOUS_FILE: Keymap = Keymap(Qt.Key.Key_G, "G")
     SAVE_MASK: Keymap = Keymap("Ctrl+S", "Ctrl+S")
@@ -61,7 +61,7 @@ class Config:
         "xl0.pt", 
         "xl1.pt", 
         "PATH_TO_YOUR_CHECKPOINT"
-    ] = "xl0.pt"
+    ] = "sam_vit_b_01ec64.pth"
     download_weights_if_not_available: bool = True
     label_file: str = "labels.json"
     window_size: tuple[int, int] | int = (1920, 1080)
