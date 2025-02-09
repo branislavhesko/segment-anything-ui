@@ -18,6 +18,7 @@ class PaintType(Enum):
     POLYGON = 3
     MASK_PICKER = 4
     ZOOM_PICKER = 5
+    BOX_PICKER = 6
 
 
 class MaskIdPicker:
@@ -146,7 +147,8 @@ class DrawLabel(QtWidgets.QLabel):
 
         if not self._paint_type == PaintType.MASK_PICKER and \
                 not self._paint_type == PaintType.ZOOM_PICKER and \
-                not self._paint_type == PaintType.POLYGON:
+                not self._paint_type == PaintType.POLYGON and \
+                not self._paint_type == PaintType.BOX_PICKER:
             self.parent().annotator.make_prediction(self.get_annotations())
             self.parent().annotator.visualize_last_mask()
 
@@ -174,7 +176,7 @@ class DrawLabel(QtWidgets.QLabel):
             masks = np.array(self.parent().annotator.masks.masks)
             mask_ids = np.where(masks[:, point[1], point[0]])[0]
             print("Picking mask at point: {}".format(point))
-            if not(len(mask_ids) > 0):
+            if not(len(mask_ids)):
                 print("No mask found")
                 mask_id = -1
                 local_mask = np.zeros((masks.shape[1], masks.shape[2]))
@@ -186,6 +188,22 @@ class DrawLabel(QtWidgets.QLabel):
             self.parent().annotator.masks.mask_id = mask_id
             self.parent().annotator.last_mask = local_mask
             self.parent().annotator.visualize_last_mask(label)
+        
+        if self._paint_type == PaintType.BOX_PICKER and ev.button() == QtCore.Qt.LeftButton:
+            size = self.size()
+            point = [
+                float(ev.pos().x() / size.width()),
+                float(ev.pos().y() / size.height())]
+            bounding_box, bounding_box_id = self.parent().annotator.bounding_boxes.find_closest_bounding_box(point)
+            if bounding_box is None:
+                print("No bounding box found")
+            else:
+                self.parent().annotator.bounding_boxes.bounding_box_id = bounding_box_id
+            print(f"Bounding box: {bounding_box}")
+            print(f"Bounding box id: {bounding_box_id}")
+            self.parent().update(self.parent().annotator.merge_image_visualization())
+            
+        
         if self._paint_type == PaintType.POINT:
             point = ev.pos()
             if ev.button() == QtCore.Qt.LeftButton:

@@ -41,6 +41,7 @@ class KeyBindings:
     CANCEL_ANNOTATION: Keymap = Keymap(Qt.Key.Key_C, "C")
     SAVE_ANNOTATION: Keymap = Keymap(Qt.Key.Key_S, "S")
     PICK_MASK: Keymap = Keymap(Qt.Key.Key_X, "X")
+    PICK_BOUNDING_BOX: Keymap = Keymap(Qt.Key.Key_B, "B")
     MERGE_MASK: Keymap = Keymap(Qt.Key.Key_Z, "Z")
     DELETE_MASK: Keymap = Keymap(Qt.Key.Key_V, "V")
     PARTIAL_ANNOTATION: Keymap = Keymap(Qt.Key.Key_D, "D")

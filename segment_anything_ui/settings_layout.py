@@ -9,6 +9,7 @@ from PySide6.QtWidgets import QPushButton, QWidget, QFileDialog, QVBoxLayout, QL
 
 from segment_anything_ui.annotator import MasksAnnotation
 from segment_anything_ui.config import Config
+from segment_anything_ui.utils.bounding_boxes import BoundingBox
 
 
 class FilesHolder:
@@ -119,6 +120,7 @@ class SettingsLayout(QWidget):
     def _load_image(self, file: str):
         mask = file.split(".")[0] + self.MASK_EXTENSION
         labels = file.split(".")[0] + self.LABELS_EXTENSION
+        bounding_boxes = file.split(".")[0] + self.BOUNDING_BOXES_EXTENSION
         image = cv2.imread(file, cv2.IMREAD_UNCHANGED)
         self.actual_shape = image.shape[:2][::-1]
         self.actual_file = file
@@ -137,6 +139,10 @@ class SettingsLayout(QWidget):
         if os.path.exists(mask) and os.path.exists(labels):
             self._load_annotation(mask, labels)
             self.parent().info_label.setText("Loaded annotation from saved files!")
+            self.parent().update(self.parent().annotator.merge_image_visualization())
+        elif os.path.exists(bounding_boxes):
+            self._load_bounding_boxes(bounding_boxes)
+            self.parent().info_label.setText("Loaded bounding boxes from saved files!")
             self.parent().update(self.parent().annotator.merge_image_visualization())
         else:
             self.parent().info_label.setText("No annotation found!")
@@ -166,7 +172,13 @@ class SettingsLayout(QWidget):
             masks.append(single_mask)
             new_labels.append(class_)
         self.parent().annotator.masks = MasksAnnotation.from_masks(masks, new_labels)
-
+        
+    def _load_bounding_boxes(self, bounding_boxes):
+        with open(bounding_boxes, "r") as f:
+            bounding_boxes: list[dict[str, float | str]] = json.load(f)
+        for bounding_box in bounding_boxes:
+            self.parent().annotator.bounding_boxes.append(BoundingBox(**bounding_box))
+    
     def on_show_image(self):
         pass
 

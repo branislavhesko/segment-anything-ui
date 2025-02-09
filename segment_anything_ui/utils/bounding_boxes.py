@@ -9,6 +9,7 @@ class BoundingBox:
     x_max: float
     y_max: float
     label: str
+    mask_uid: str = ""
     
     def to_dict(self):
         return {
@@ -16,8 +17,19 @@ class BoundingBox:
             "y_min": self.y_min,
             "x_max": self.x_max,
             "y_max": self.y_max,
-            "label": self.label
+            "label": self.label,
+            "mask_uid": self.mask_uid
         }
+    
+    @property
+    def center(self):
+        return np.array([(self.x_min + self.x_max) / 2, (self.y_min + self.y_max) / 2])
+
+    def distance_to(self, point: np.ndarray):
+        return np.linalg.norm(self.center - point)
+
+    def contains(self, point: np.ndarray):
+        return self.x_min <= point[0] <= self.x_max and self.y_min <= point[1] <= self.y_max
 
 
 def get_mask_bounding_box(mask, label: str):
