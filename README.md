@@ -12,13 +12,15 @@ Segment anything UI for annotations
  1. Install segment-anything python package from Github: [Segment anything](https://github.com/facebookresearch/segment-anything). Usually it is enough to run: ```pip install git+https://github.com/facebookresearch/segment-anything.git```.
  2. Download checkpoint [Checkpoint_Huge](https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth) or [Checkpoint_Large](https://dl.fbaipublicfiles.com/segment_anything/sam_vit_l_0b3195.pth) or [Checkpoint_Base](https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth) and put it into workspace folder.
  3. Fill default_path in ```segment_anything_ui/config.py```.
- 4. Install efficientnet models ```pip install git+https://github.com/mit-han-lab/efficientvit```. See note below for Windows users about installing onnx!
+ 4. (Optional) Install efficientnet models ```pip install git+https://github.com/mit-han-lab/efficientvit```. See note below for Windows users about installing onnx!
+ 5. (Optional) Install sam_hq models ```pip install segment-anything-hq```
  5. Install requirements.txt. ```pip install -r requirements.txt```.
  6. If on Ubuntu or Debian based distro, please use the following ```apt install libxkbcommon-x11-0 qt5dxcb-plugin libxcb-cursor0```. This will fix issues with Qt.
  7. ```export PYTHONPATH=$PYTHONPATH:.```.
  8. ```python segment_anything_ui/main_window.py```.
 
 Currently, for saving a simple format is used: mask is saved as .png file, when masks are represented by values: 1 ... n and corresponding labels are saved as jsons. In json, labels are a map with mapping: MASK_ID: LABEL. MASK_ID is the id of the stored mask and LABEL is one of "labels.json" files.
+
 
 ``` 
 For windows users, sometimes you will observe onnx used in EfficientVit is not easy to install using pip. In that case, it may be caused by
@@ -31,6 +33,32 @@ Finally, fix onnx version, newest version seems to be broken
 pip install onnx==1.15.0
 ```
 
+
+# Checkpoints
+Checkpoints are downloaded automatically if the model is not found in the workspace folder.
+
+### SAM
+- `vit_b`: [ViT-B SAM model](https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth)
+- `vit_h`: [ViT-H SAM model](https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth)
+- `vit_l`: [ViT-L SAM model](https://dl.fbaipublicfiles.com/segment_anything/sam_vit_l_0b3195.pth)
+
+### HQ-SAM
+- `vit_b`: [ViT-B HQ-SAM model](https://huggingface.co/lkeab/hq-sam/blob/main/sam_hq_vit_b.pth)
+- `vit_l`: [ViT-L HQ-SAM model](https://huggingface.co/lkeab/hq-sam/blob/main/sam_hq_vit_l.pth)
+- `vit_h`: [ViT-H HQ-SAM model](https://huggingface.co/lkeab/hq-sam/blob/main/sam_hq_vit_h.pth)
+- `vit_tiny` (**Light HQ-SAM** for real-time need): [ViT-Tiny HQ-SAM model](https://huggingface.co/lkeab/hq-sam/blob/main/sam_hq_vit_tiny.pth)
+
+### EfficientViT
+- `xl0`: [EfficientViT-XL0 model](https://huggingface.co/han-cai/efficientvit-sam/resolve/main/xl0.pt)
+- `xl1`: [EfficientViT-XL1 model](https://huggingface.co/han-cai/efficientvit-sam/resolve/main/xl1.pt)
+- `l2`: [EfficientViT-L2 model](https://huggingface.co/han-cai/efficientvit-sam/resolve/main/l2.pt)
+
+### SAM2
+- `sam2.1_hiera_t`: [SAM2.1 Hiera Tiny model](https://dl.fbaipublicfiles.com/segment_anything_2/092824//sam2.1_hiera_tiny.pt)
+- `sam2.1_hiera_l`: [SAM2.1 Hiera Small model](https://dl.fbaipublicfiles.com/segment_anything_2/092824//sam2.1_hiera_small.pt)
+- `sam2.1_hiera_b+`: [SAM2.1 Hiera Base+ model](https://dl.fbaipublicfiles.com/segment_anything_2/092824//sam2.1_hiera_base_plus.pt)
+- `sam2.1_hiera_s`: [SAM2.1 Hiera Large model](https://dl.fbaipublicfiles.com/segment_anything_2/092824//sam2.1_hiera_large.pt)
+
 # Functions
 There are multiple functions that this UI implements. Few of them are:
 
@@ -38,6 +66,8 @@ There are multiple functions that this UI implements. Few of them are:
  * Add boxes - a bounding box can be added to SAM annotation when the proper annotation tool is selected. Manual points, boxes and polygons in the future are used for SAM prediction.
  * Add manual polygons - by clicking in the image using left mouse button (and selected manual annotation) manual annotation is done. It does not provide any other features right now.
  * Instance mask is saved by clicking on "Save Annotation" button.
+ * Turn on bounding boxes - by clicking on "Turn on bounding boxes" button, you can turn on bounding boxes for the image.
+ * Save only bounding boxes - by clicking on "Save only bounding boxes" button, you can save only bounding boxes for the image.
  * Annotate All - uses SAM to predict all masks by prompting the model with a grid of points followed by post-processing to refine masks.
  * Pick Mask - Select a Mask from the image to delete it or inspect. Modifications are currently not allowed. As annotator allows multiple instances assigned to a pixel, Left clicking on the pixel cyclically changes between assigned masks.
  * Each Instance mask is assigned a class according to the chosen label in the list. This list is loaded from labels.json file.

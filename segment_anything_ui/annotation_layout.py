@@ -101,11 +101,13 @@ class AnnotationLayout(QWidget):
             self.parent().update(self.parent().annotator.merge_image_visualization())
         elif self.parent().image_label.paint_type == PaintType.BOX_PICKER:
             self.parent().info_label.setText("Deleting bounding box!")
-            bounding_box = self.parent().annotator.bounding_boxes.remove(self.parent().annotator.bounding_boxes.bounding_box_id)
-            if bounding_box.mask_uid != "":
-                self.parent().annotator.masks.pop_by_uuid(bounding_box.mask_uid)
+            mask_uid = self.parent().annotator.bounding_boxes.remove_by_id(
+                self.parent().annotator.bounding_boxes.bounding_box_id)
+            if mask_uid is not None:
+                self.parent().annotator.masks.pop_by_uuid(mask_uid)
             self.parent().annotator.bounding_boxes.bounding_box_id = -1
             self.parent().annotator.last_mask = None
+            self.parent().annotator.masks.mask_id = -1
             self.parent().update(self.parent().annotator.merge_image_visualization())
         else:
             QMessageBox.warning(self, "Error", "Please pick a mask or bounding box to delete!")

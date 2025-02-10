@@ -61,8 +61,15 @@ class Config:
         "sam_vit_l_0b3195.pth", 
         "xl0.pt", 
         "xl1.pt", 
-        "PATH_TO_YOUR_CHECKPOINT"
-    ] = "sam_vit_b_01ec64.pth"
+        "sam_hq_vit_b.pth",
+        "sam_hq_vit_l.pth",
+        "sam_hq_vit_h.pth",
+        "sam_hq_vit_tiny.pth",
+        "sam2.1_hiera_t.pth",
+        "sam2.1_hiera_l.pth",
+        "sam2.1_hiera_b+.pth",
+        "sam2.1_hiera_s.pth",
+    ] = "sam_hq_vit_h.pth"
     download_weights_if_not_available: bool = True
     label_file: str = "labels.json"
     window_size: tuple[int, int] | int = (1920, 1080)
@@ -74,6 +81,14 @@ class Config:
         "vit_l": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_l_0b3195.pth",
         "xl0": "https://huggingface.co/han-cai/efficientvit-sam/resolve/main/xl0.pt",
         "xl1": "https://huggingface.co/han-cai/efficientvit-sam/resolve/main/xl1.pt",
+        "hq_vit_b": "https://huggingface.co/lkeab/hq-sam/blob/main/sam_hq_vit_b.pth",
+        "hq_vit_l": "https://huggingface.co/lkeab/hq-sam/blob/main/sam_hq_vit_l.pth",
+        "hq_vit_h": "https://huggingface.co/lkeab/hq-sam/blob/main/sam_hq_vit_h.pth",
+        "hq_vit_tiny": "https://huggingface.co/lkeab/hq-sam/blob/main/sam_hq_vit_tiny.pth",
+        "sam2.1_hiera_t": "https://dl.fbaipublicfiles.com/segment_anything_2/092824//sam2.1_hiera_tiny.pt",
+        "sam2.1_hiera_l": "https://dl.fbaipublicfiles.com/segment_anything_2/092824//sam2.1_hiera_small.pt",
+        "sam2.1_hiera_b+": "https://dl.fbaipublicfiles.com/segment_anything_2/092824//sam2.1_hiera_base_plus.pt",
+        "sam2.1_hiera_s": "https://dl.fbaipublicfiles.com/segment_anything_2/092824//sam2.1_hiera_large.pt",
     })
 
     def __post_init__(self):
@@ -95,6 +110,14 @@ class Config:
             return "xl0"
         if "xl1" in self.default_weights:
             return "xl1"
+        if "hq_vit_b" in self.default_weights:
+            return "hq_vit_b"
+        if "hq_vit_l" in self.default_weights:
+            return "hq_vit_l"
+        if "hq_vit_h" in self.default_weights:
+            return "hq_vit_h"
+        if "hq_vit_tiny" in self.default_weights:
+            return "hq_vit_tiny"
         raise ValueError("Unknown model name")
 
     def download_weights(self):

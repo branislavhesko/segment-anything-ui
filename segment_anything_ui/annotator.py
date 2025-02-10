@@ -146,6 +146,11 @@ class BoundingBoxAnnotation:
         if self.bounding_box_id >= bounding_box_id:
             self.bounding_box_id -= 1
         return bounding_box
+    
+    def remove_by_id(self, bounding_box_id: int):
+        mask_uid = self.bounding_boxes[bounding_box_id].mask_uid
+        self.remove(mask_uid)
+        return mask_uid
 
     def __len__(self):
         return len(self.bounding_boxes)
@@ -203,7 +208,7 @@ class MasksAnnotation:
         return self.add_mask(mask, label)
     
     def pop_by_uuid(self, mask_uid: str):
-        mask_id = next((idx for idx, mask_uid in enumerate(self.masks_uids) if mask_uid == mask_uid), None)
+        mask_id = next((idx for idx, m_uid in enumerate(self.masks_uids) if m_uid == mask_uid), None)
         if mask_id is None:
             return
         return self.pop(mask_id)
