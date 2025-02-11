@@ -16,11 +16,17 @@ try:
     from segment_anything_hq import automatic_mask_generator as automatic_mask_generator_hq
     from segment_anything_hq.build_sam import Sam as SamHQ
     IS_SAM_HQ_AVAILABLE = True
+    _SAM_HQ_MODEL_REGISTRY = {
+        "hq_vit_b": "vit_b",
+        "hq_vit_l": "vit_l",
+        "hq_vit_h": "vit_h",
+        "hq_vit_tiny": "vit_tiny",
+    }
 except (ModuleNotFoundError, ImportError) as e:
     import logging
     logging.warning("Segment Anything HQ is not available, please install the package from http://github.com/SysCV/sam-hq .")
     IS_SAM_HQ_AVAILABLE = False
-    
+    _SAM_HQ_MODEL_REGISTRY = {}
 
 try:
     from sam2.build_sam import build_sam2
@@ -68,7 +74,7 @@ def build_model(model_name: str, checkpoint_path: str, device: str):
             if not IS_SAM_HQ_AVAILABLE:
                 QMessageBox.critical(None, "Segment Anything HQ is not available", "Please install the package from http://github.com/SysCV/sam-hq .")
                 raise ValueError("Segment Anything HQ is not available, please install the package from http://github.com/SysCV/sam-hq .")
-            sam = sam_hq_model_registry[model_name](
+            sam = sam_hq_model_registry[_SAM_HQ_MODEL_REGISTRY[model_name]](
                 checkpoint=checkpoint_path)
             sam.eval()
             return sam.to(device)

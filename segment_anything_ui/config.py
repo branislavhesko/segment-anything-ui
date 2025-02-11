@@ -81,10 +81,10 @@ class Config:
         "vit_l": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_l_0b3195.pth",
         "xl0": "https://huggingface.co/han-cai/efficientvit-sam/resolve/main/xl0.pt",
         "xl1": "https://huggingface.co/han-cai/efficientvit-sam/resolve/main/xl1.pt",
-        "hq_vit_b": "https://huggingface.co/lkeab/hq-sam/blob/main/sam_hq_vit_b.pth",
-        "hq_vit_l": "https://huggingface.co/lkeab/hq-sam/blob/main/sam_hq_vit_l.pth",
-        "hq_vit_h": "https://huggingface.co/lkeab/hq-sam/blob/main/sam_hq_vit_h.pth",
-        "hq_vit_tiny": "https://huggingface.co/lkeab/hq-sam/blob/main/sam_hq_vit_tiny.pth",
+        "hq_vit_b": "https://huggingface.co/lkeab/hq-sam/resolve/main/sam_hq_vit_b.pth",
+        "hq_vit_l": "https://huggingface.co/lkeab/hq-sam/resolve/main/sam_hq_vit_l.pth",
+        "hq_vit_h": "https://huggingface.co/lkeab/hq-sam/resolve/main/sam_hq_vit_h.pth",
+        "hq_vit_tiny": "https://huggingface.co/lkeab/hq-sam/resolve/main/sam_hq_vit_tiny.pth",
         "sam2.1_hiera_t": "https://dl.fbaipublicfiles.com/segment_anything_2/092824//sam2.1_hiera_tiny.pt",
         "sam2.1_hiera_l": "https://dl.fbaipublicfiles.com/segment_anything_2/092824//sam2.1_hiera_small.pt",
         "sam2.1_hiera_b+": "https://dl.fbaipublicfiles.com/segment_anything_2/092824//sam2.1_hiera_base_plus.pt",
@@ -100,12 +100,12 @@ class Config:
     def get_sam_model_name(self):
         if "l2" in self.default_weights:
             return "l2"
-        if "vit_b" in self.default_weights:
-            return "vit_b"
-        if "vit_h" in self.default_weights:
-            return "vit_h"
-        if "vit_l" in self.default_weights:
-            return "vit_l"
+        if "sam_vit_b" in self.default_weights:
+            return "sam_vit_b"
+        if "sam_vit_h" in self.default_weights:
+            return "sam_vit_h"
+        if "sam_vit_l" in self.default_weights:
+            return "sam_vit_l"
         if "xl0" in self.default_weights:
             return "xl0"
         if "xl1" in self.default_weights:

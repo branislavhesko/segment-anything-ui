@@ -41,9 +41,10 @@ class SegmentAnythingUI(QWidget):
         self.set_image(np.zeros((self.config.window_size[1], self.config.window_size[0], 3), dtype=np.uint8))
         self.show()
 
-    def set_image(self, image: np.ndarray):
+    def set_image(self, image: np.ndarray, clear_annotations: bool = True):
         self.annotator.set_image(image).make_embedding()
-        self.annotator.clear()
+        if clear_annotations:
+            self.annotator.clear()
         self.update(image)
 
     def update(self, image: np.ndarray):

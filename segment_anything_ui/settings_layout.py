@@ -92,6 +92,7 @@ class SettingsLayout(QWidget):
         self.layout.addWidget(self.show_image)
         self.layout.addWidget(self.show_visualization)
         self.files = FilesHolder()
+        self.original_image = np.zeros((self.config.window_size[1], self.config.window_size[0], 3), dtype=np.uint8)
 
     def on_delete_existing_annotation(self):
         path = os.path.split(self.actual_file)[0]
@@ -135,19 +136,19 @@ class SettingsLayout(QWidget):
                            (int(self.parent().config.window_size[0]), self.parent().config.window_size[1]))
         self.parent().annotator.clear()
         self.parent().image_label.clear()
+        self.original_image = image.copy()
         self.parent().set_image(image)
         if os.path.exists(mask) and os.path.exists(labels):
             self._load_annotation(mask, labels)
-            self.parent().info_label.setText("Loaded annotation from saved files!")
+            self.parent().info_label.setText(f"Loaded annotation from saved files! Image: {file}")
             self.parent().update(self.parent().annotator.merge_image_visualization())
         elif os.path.exists(bounding_boxes):
             self._load_bounding_boxes(bounding_boxes)
-            self.parent().info_label.setText("Loaded bounding boxes from saved files!")
+            self.parent().info_label.setText(f"Loaded bounding boxes from saved files! Image: {file}")
             self.parent().update(self.parent().annotator.merge_image_visualization())
         else:
-            self.parent().info_label.setText("No annotation found!")
+            self.parent().info_label.setText(f"No annotation found! Image: {file}")
             self.tag_text_field.setText("")
-            self.parent().update(image)
 
     def _load_annotation(self, mask, labels):
         mask = cv2.imread(mask, cv2.IMREAD_UNCHANGED)
@@ -180,10 +181,10 @@ class SettingsLayout(QWidget):
             self.parent().annotator.bounding_boxes.append(BoundingBox(**bounding_box))
     
     def on_show_image(self):
-        pass
+        self.parent().set_image(self.original_image, clear_annotations=False)
 
     def on_show_visualization(self):
-        pass
+        self.parent().update(self.parent().annotator.merge_image_visualization())
 
     def on_precompute(self):
         pass
