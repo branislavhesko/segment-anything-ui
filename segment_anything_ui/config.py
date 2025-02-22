@@ -69,7 +69,7 @@ class Config:
         "sam2.1_hiera_l.pth",
         "sam2.1_hiera_b+.pth",
         "sam2.1_hiera_s.pth",
-    ] = "sam_hq_vit_h.pth"
+    ] = "sam2.1_hiera_s.pth"
     download_weights_if_not_available: bool = True
     label_file: str = "labels.json"
     window_size: tuple[int, int] | int = (1920, 1080)
@@ -85,10 +85,10 @@ class Config:
         "hq_vit_l": "https://huggingface.co/lkeab/hq-sam/resolve/main/sam_hq_vit_l.pth",
         "hq_vit_h": "https://huggingface.co/lkeab/hq-sam/resolve/main/sam_hq_vit_h.pth",
         "hq_vit_tiny": "https://huggingface.co/lkeab/hq-sam/resolve/main/sam_hq_vit_tiny.pth",
-        "sam2.1_hiera_t": "https://dl.fbaipublicfiles.com/segment_anything_2/092824//sam2.1_hiera_tiny.pt",
-        "sam2.1_hiera_l": "https://dl.fbaipublicfiles.com/segment_anything_2/092824//sam2.1_hiera_small.pt",
-        "sam2.1_hiera_b+": "https://dl.fbaipublicfiles.com/segment_anything_2/092824//sam2.1_hiera_base_plus.pt",
-        "sam2.1_hiera_s": "https://dl.fbaipublicfiles.com/segment_anything_2/092824//sam2.1_hiera_large.pt",
+        "sam2.1_hiera_t": "https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_tiny.pt",
+        "sam2.1_hiera_s": "https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_small.pt",
+        "sam2.1_hiera_b+": "https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_base_plus.pt",
+        "sam2.1_hiera_l": "https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_large.pt",
     })
 
     def __post_init__(self):
@@ -118,8 +118,15 @@ class Config:
             return "hq_vit_h"
         if "hq_vit_tiny" in self.default_weights:
             return "hq_vit_tiny"
+        if "sam2.1_hiera_t" in self.default_weights:
+            return "sam2.1_hiera_t"
+        if "sam2.1_hiera_l" in self.default_weights:
+            return "sam2.1_hiera_l"
+        if "sam2.1_hiera_b+" in self.default_weights:
+            return "sam2.1_hiera_b+"
+        if "sam2.1_hiera_s" in self.default_weights:
+            return "sam2.1_hiera_s"
         raise ValueError("Unknown model name")
-
     def download_weights(self):
         if not os.path.exists(self.default_weights):
             try:

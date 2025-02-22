@@ -35,13 +35,19 @@ try:
     from sam2.automatic_mask_generator import SAM2AutomaticMaskGenerator
 
     IS_SAM2_AVAILABLE = True
-    
-    _SAM2_MODEL_REGISTRY = {
-        "sam2.1_hiera_t": os.path.join(os.path.dirname(__file__), "sam2_configs", "sam2.1_hiera_t.yaml"),
-        "sam2.1_hiera_l": os.path.join(os.path.dirname(__file__), "sam2_configs", "sam2.1_hiera_l.yaml"),
-        "sam2.1_hiera_b": os.path.join(os.path.dirname(__file__), "sam2_configs", "sam2.1_hiera_b+.yaml"),
-        "sam2.1_hiera_s": os.path.join(os.path.dirname(__file__), "sam2_configs", "sam2.1_hiera_s.yaml"),
-    }
+    from hydra.core.global_hydra import GlobalHydra
+    from hydra import initialize
+
+    # Reset Hydra's global configuration
+    if GlobalHydra.instance().is_initialized():
+        GlobalHydra.instance().clear()
+
+        _SAM2_MODEL_REGISTRY = {
+            "sam2.1_hiera_t": "sam2.1_hiera_t.yaml",
+            "sam2.1_hiera_l": "sam2.1_hiera_l.yaml",
+            "sam2.1_hiera_b": "sam2.1_hiera_b+.yaml",
+            "sam2.1_hiera_s": "sam2.1_hiera_s.yaml",
+        }
     
 except (ModuleNotFoundError, ImportError) as e:
     import logging
@@ -82,7 +88,9 @@ def build_model(model_name: str, checkpoint_path: str, device: str):
             if not IS_SAM2_AVAILABLE:
                 QMessageBox.critical(None, "SAM2 is not available", "Please install the package from https://github.com/facebookresearch/sam2 .")
                 raise ValueError("SAM2 is not available, please install the package from https://github.com/facebookresearch/sam2 .")
-            sam = build_sam2(_SAM2_MODEL_REGISTRY[model_name], checkpoint_path, device=device)
+
+            with initialize(version_base=None, config_path="sam2_configs"):
+                sam = build_sam2(_SAM2_MODEL_REGISTRY[model_name], checkpoint_path, device=device)
             sam.eval()
             return sam
         case _:
