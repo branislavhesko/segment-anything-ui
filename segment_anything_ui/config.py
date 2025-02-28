@@ -69,7 +69,7 @@ class Config:
         "sam2.1_hiera_l.pth",
         "sam2.1_hiera_b+.pth",
         "sam2.1_hiera_s.pth",
-    ] = "sam2.1_hiera_s.pth"
+    ] = "sam_vit_h_4b8939.pth"
     download_weights_if_not_available: bool = True
     label_file: str = "labels.json"
     window_size: tuple[int, int] | int = (1920, 1080)
@@ -101,11 +101,11 @@ class Config:
         if "l2" in self.default_weights:
             return "l2"
         if "sam_vit_b" in self.default_weights:
-            return "sam_vit_b"
+            return "vit_b"
         if "sam_vit_h" in self.default_weights:
-            return "sam_vit_h"
+            return "vit_h"
         if "sam_vit_l" in self.default_weights:
-            return "sam_vit_l"
+            return "vit_l"
         if "xl0" in self.default_weights:
             return "xl0"
         if "xl1" in self.default_weights:
