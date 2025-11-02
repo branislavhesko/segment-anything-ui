@@ -45,6 +45,8 @@ class SettingsLayout(QWidget):
         self.actual_file: str = ""
         self.actual_shape = self.config.window_size
         self.layout = QVBoxLayout(self)
+        self.checkbox_bounding_box_vs_mask = QCheckBox("Bounding Box vs Mask")
+        self.checkbox_bounding_box_vs_mask.clicked.connect(self.on_toggle_bounding_box_vs_mask)
         self.open_files = QPushButton("Open Files")
         self.open_files.clicked.connect(self.on_open_files)
         self.next_file = QPushButton(f"Next File [ {config.key_mapping.NEXT_FILE.name} ]")
@@ -75,6 +77,7 @@ class SettingsLayout(QWidget):
         self.show_text.clicked.connect(self.on_show_text)
         self.tag_text_field = QLineEdit(self)
         self.tag_text_field.setPlaceholderText("Comma separated image tags")
+        self.layout.addWidget(self.checkbox_bounding_box_vs_mask)
         self.layout.addWidget(self.open_files)
         self.layout.addWidget(self.next_file)
         self.layout.addWidget(self.previous_file)
@@ -93,6 +96,12 @@ class SettingsLayout(QWidget):
         self.layout.addWidget(self.show_visualization)
         self.files = FilesHolder()
         self.original_image = np.zeros((self.config.window_size[1], self.config.window_size[0], 3), dtype=np.uint8)
+        
+    def on_toggle_bounding_box_vs_mask(self, state: bool):
+        if state:
+            self.parent().switch_to_bounding_box_mode()
+        else:
+            self.parent().switch_to_mask_mode()
 
     def on_delete_existing_annotation(self):
         path = os.path.split(self.actual_file)[0]

@@ -11,6 +11,7 @@ from segment_anything import SamPredictor
 from segment_anything.build_sam import Sam
 from segment_anything_ui.model_builder import (
     get_predictor, get_mask_generator, SamPredictor)
+from segment_anything_ui.utils import bounding_boxes
 try:
     from segment_anything_ui.model_builder import EfficientViTSamPredictor, EfficientViTSam
 except (ImportError, ModuleNotFoundError):
@@ -26,6 +27,7 @@ import torch
 from segment_anything_ui.utils.shapes import BoundingBox
 from segment_anything_ui.utils.bounding_boxes import get_bounding_boxes, get_mask_bounding_box
 
+
 def get_cmap(n, name='hsv'):
     '''Returns a function that maps each index in 0, 1, ..., n-1 to a distinct
     RGB color; the keyword argument name must be a standard mpl colormap name.'''
@@ -33,6 +35,7 @@ def get_cmap(n, name='hsv'):
         return plt.cm.get_cmap(name, n)
     except:
         return plt.get_cmap(name, n)
+
 
 def crop_image(
         image,
@@ -61,6 +64,19 @@ def insert_image(image, box: BoundingBox | None = None):
             new_image[box.ystart:box.yend, box.xstart:box.xend, :] = cv2.resize(
                 image.astype(np.uint8), (int(box.xend) - int(box.xstart), int(box.yend) - int(box.ystart)))
     return new_image
+
+
+def find_closest_bounding_box(bounding_boxes: list[BoundingBox], point: np.ndarray):
+    closest_bounding_box = None
+    closest_bounding_box_id = -1
+    min_distance = float('inf')
+    for idx, bounding_box in enumerate(bounding_boxes):
+        distance = bounding_box.distance_to(point)
+        if distance < min_distance and bounding_box.contains(point):
+            min_distance = distance
+            closest_bounding_box = bounding_box
+            closest_bounding_box_id = idx
+    return closest_bounding_box, closest_bounding_box_id
 
 
 @dataclasses.dataclass()
@@ -106,6 +122,98 @@ class CustomForm(QWidget):
 
     def get_values(self):
         return AutomaticMaskGeneratorSettings(**{widget.label.text(): widget.get_value() for widget in self.widgets})
+
+
+@dataclasses.dataclass()
+class Annotation:
+    bounding_box: BoundingBox | None = None
+    mask_uid: str | None = None
+    mask_id: int | None = None
+    label: str | None = None
+
+    def __post_init__(self):
+        if self.mask is not None:
+            self.bounding_box = get_mask_bounding_box(self.mask)
+            
+            
+class Annotations:
+    """
+    Annotations is a class that contains a list of masks and their corresponding bounding boxes.
+    """
+    DEFAULT_LABEL = "default"
+    
+    def __init__(self) -> None:
+        self.annotations: list[Annotation] = []
+        self.current_annotation_id: int = -1
+        self.masks = []
+
+    def append(self, mask, label: str | None = None):
+        label = self.DEFAULT_LABEL if label is None else label
+        annotation = Annotation(
+            bounding_box=get_mask_bounding_box(mask, label),
+            mask_uid=str(uuid.uuid4()),
+            mask_id=len(self.masks),
+            label=label
+        )
+        self.masks.append(mask)
+        self.annotations.append(annotation)
+        return annotation
+    
+    def get_mask_by_uid(self, mask_uid: str):
+        mask_uuids = [annotation.mask_uid for annotation in self.annotations]
+        mask_id = mask_uuids.index(mask_uid)
+        return self.masks[mask_id]
+    
+    def get_label_by_id(self, mask_id: int):
+        return self.annotations[mask_id].label
+    
+    def get_mask_by_id(self, mask_id: int):
+        return self.masks[mask_id]
+    
+    def set_current_mask(self, mask: np.ndarray, label: str | None = None):
+        mask_id = self.current_annotation_id
+        if label is not None:
+            self.annotations[mask_id].label = label
+        self.masks[mask_id] = mask
+        
+    def get_current_mask(self):
+        mask_id = self.current_annotation_id
+        return self.masks[mask_id]
+    
+    def get_current_annotation(self):
+        return self.annotations[self.current_annotation_id]
+    
+    def get_bounding_boxes(self):
+        return [annotation.bounding_box for annotation in self.annotations]
+    
+    def remove_by_uid(self, mask_uid: str):
+        mask_uids = [annotation.mask_uid for annotation in self.annotations]
+        mask_id = mask_uids.index(mask_uid)
+        self.remove_by_id(mask_id)
+        return mask_uid
+    
+    def remove_by_id(self, mask_id: int):
+        self.masks.pop(mask_id)
+        self.annotations.pop(mask_id)
+        return mask_id
+    
+    @classmethod
+    def from_masks(cls, masks, labels: list[str] | None = None):
+        annotations = cls()
+        if labels is None:
+            labels = [cls.DEFAULT_LABEL] * len(masks)
+        for mask, label in zip(masks, labels):
+            annotations.append(mask, label)
+        return annotations
+
+    def __len__(self):
+        return len(self.annotations)
+    
+    def __getitem__(self, mask_uid: str):
+        return self.get_mask_by_uid(mask_uid)
+    
+    def __setitem__(self, mask_uid: str, value):
+        self.annotations[mask_uid] = value
     
     
 class BoundingBoxAnnotation:
@@ -115,19 +223,6 @@ class BoundingBoxAnnotation:
 
     def append(self, bounding_box: BoundingBox):
         self.bounding_boxes.append(bounding_box)
-
-    def find_closest_bounding_box(self, point: np.ndarray):
-        closest_bounding_box = None
-        closest_bounding_box_id = -1
-        min_distance = float('inf')
-        for idx, bounding_box in enumerate(self.bounding_boxes):
-            distance = bounding_box.distance_to(point)
-            if distance < min_distance and bounding_box.contains(point):
-                min_distance = distance
-                closest_bounding_box = bounding_box
-                closest_bounding_box_id = idx
-        self.bounding_box_id = closest_bounding_box_id
-        return closest_bounding_box, closest_bounding_box_id
     
     def get_bounding_box(self, bounding_box_id: int):
         return self.bounding_boxes[bounding_box_id]
@@ -238,8 +333,7 @@ class Annotator:
     sam: Sam | EfficientViTSam | None = None
     embedding: torch.Tensor | None = None
     image: np.ndarray | None = None
-    masks: MasksAnnotation = dataclasses.field(default_factory=MasksAnnotation)
-    bounding_boxes: BoundingBoxAnnotation = dataclasses.field(default_factory=BoundingBoxAnnotation)
+    annotations: Annotations = dataclasses.field(default_factory=Annotations)
     predictor: SamPredictor | EfficientViTSamPredictor | None = None
     visualization: np.ndarray | None = None
     last_mask: np.ndarray | None = None
@@ -272,8 +366,8 @@ class Annotator:
         masks = generator.generate(self.image)
         masks = [(m["segmentation"] * 255).astype(np.uint8) for m in masks]
         label = self.parent.annotation_layout.label_picker.currentItem().text()
-        self.masks = MasksAnnotation.from_masks(masks, [label, ] * len(masks))
-        self.cmap = get_cmap(len(self.masks))
+        self.annotations = Annotations.from_masks(masks, [label, ] * len(masks))
+        self.cmap = get_cmap(len(self.annotations))
 
     def make_prediction(self, annotation: dict):
         masks, scores, logits = self.predictor.predict(
@@ -293,11 +387,11 @@ class Annotator:
         self.last_mask = None
 
     def move_current_mask_to_background(self):
-        self.masks.set_current_mask(self.masks.get_current_mask() * 0.5)
+        self.annotations.set_current_mask(self.annotations.get_current_mask() * 0.5)
 
     def merge_masks(self):
         new_mask = np.bitwise_or(self.last_mask, self.merged_mask)
-        self.masks.set_current_mask(new_mask, self.parent.annotation_layout.label_picker.currentItem().text())
+        self.annotations.set_current_mask(new_mask, self.parent.annotation_layout.label_picker.currentItem().text())
         self.merged_mask = None
 
     def visualize_last_mask(self, label: str | None = None):
@@ -351,7 +445,7 @@ class Annotator:
             visualization[mask_argmax == i, :] = np.array(color[:3]) * 255
             border += single_mask - cv2.erode(
                 single_mask, np.ones((3, 3), np.uint8), iterations=1)
-            label = self.masks.get_label(i)
+            label = self.annotations.get_label_by_id(i)
             single_mask_center = np.mean(np.where(single_mask == 1), axis=1)
             if np.isnan(single_mask_center).any():
                 continue
@@ -388,43 +482,39 @@ class Annotator:
         return visualization, border
 
     def has_annotations(self):
-        return len(self.masks) > 0
+        return len(self.annotations) > 0
 
     def make_instance_mask(self):
-        background = np.zeros_like(self.masks[0]) + 1
-        mask_argmax = np.argmax(np.concatenate([np.expand_dims(background, 0), np.array(self.masks.masks)], axis=0), axis=0).astype(np.uint8)
+        background = np.zeros_like(self.annotations.masks[0]) + 1
+        mask_argmax = np.argmax(np.concatenate([np.expand_dims(background, 0), np.array(self.annotations.masks)], axis=0), axis=0).astype(np.uint8)
         return mask_argmax
     
     def get_bounding_boxes(self):
-        return get_bounding_boxes(self.masks.masks, self.masks.label_map.values())
+        return self.annotations.get_bounding_boxes()
 
     def merge_image_visualization(self):
         image = self.image.copy()
-        if not len(self.masks):
+        if not len(self.annotations):
             return crop_image(image, self.zoomed_bounding_box)
         visualization, border = self._visualize_mask()
         self.visualization = cv2.addWeighted(image, 0.8, visualization, 0.7, 0) * border[:, :, np.newaxis]
         return crop_image(self.visualization, self.zoomed_bounding_box)
 
     def remove_last_mask(self):
-        mask_id = len(self.masks)
-        self.masks.pop(mask_id)
-        self.bounding_boxes.remove(mask_id)
+        mask_id = len(self.annotations)
+        self.annotations.remove_by_id(mask_id)
 
     def make_labels(self):
-        return self.masks.label_map
+        return self.annotations.get_labels()
 
-    def save_mask(self, label: str = MasksAnnotation.DEFAULT_LABEL):
+    def save_mask(self, label: str = Annotations.DEFAULT_LABEL):
         if self.partial_mask is not None:
             last_mask = self.partial_mask
             self.partial_mask = None
         else:
             last_mask = self.last_mask
-        mask_uid = self.masks.add_mask(last_mask, label=label)
-        corresponding_bounding_box = get_mask_bounding_box(last_mask, label)
-        corresponding_bounding_box.mask_uid = mask_uid
-        self.bounding_boxes.append(corresponding_bounding_box)
-        if len(self.masks) >= self.MAX_MASKS:
+        self.annotations.append(last_mask, label=label)
+        if len(self.annotations) >= self.MAX_MASKS:
             self.MAX_MASKS += 10
             self.cmap = get_cmap(self.MAX_MASKS)
         

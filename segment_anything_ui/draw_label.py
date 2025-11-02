@@ -8,6 +8,7 @@ from PySide6 import QtCore, QtWidgets
 from PySide6.QtGui import QPainter, QPen
 
 from segment_anything_ui.config import Config
+from segment_anything_ui.annotator import find_closest_bounding_box
 from segment_anything_ui.utils.shapes import BoundingBox, Polygon
 
 
@@ -194,16 +195,16 @@ class DrawLabel(QtWidgets.QLabel):
             point = [
                 float(ev.pos().x() / size.width()),
                 float(ev.pos().y() / size.height())]
-            bounding_box, bounding_box_id = self.parent().annotator.bounding_boxes.find_closest_bounding_box(point)
+            all_bounding_boxes = self.parent().annotator.bounding_boxes.bounding_boxes
+            bounding_box, bounding_box_id = find_closest_bounding_box(all_bounding_boxes, point)
+            self.parent().annotator.bounding_boxes.bounding_box_id = bounding_box_id
+
             if bounding_box is None:
                 print("No bounding box found")
             else:
                 self.parent().annotator.bounding_boxes.bounding_box_id = bounding_box_id
-            print(f"Bounding box: {bounding_box}")
-            print(f"Bounding box id: {bounding_box_id}")
             self.parent().update(self.parent().annotator.merge_image_visualization())
-            
-        
+                 
         if self._paint_type == PaintType.POINT:
             point = ev.pos()
             if ev.button() == QtCore.Qt.LeftButton:
