@@ -12,6 +12,8 @@ except ImportError:
     tqdm = None
     wget = None
 
+from segment_anything_ui.utils.structures import AnnotationMode
+
 
 @dataclasses.dataclass(frozen=True)
 class Keymap:
@@ -55,6 +57,7 @@ class KeyBindings:
 
 @dataclasses.dataclass
 class Config:
+    default_mode: AnnotationMode = AnnotationMode.MASK
     default_weights: Literal[
         "sam_vit_b_01ec64.pth", 
         "sam_vit_h_4b8939.pth", 
@@ -69,7 +72,7 @@ class Config:
         "sam2.1_hiera_l.pth",
         "sam2.1_hiera_b+.pth",
         "sam2.1_hiera_s.pth",
-    ] = "sam_vit_h_4b8939.pth"
+    ] = "sam_vit_b_01ec64.pth"
     download_weights_if_not_available: bool = True
     label_file: str = "labels.json"
     window_size: tuple[int, int] | int = (1920, 1080)

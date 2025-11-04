@@ -11,7 +11,6 @@ from segment_anything import SamPredictor
 from segment_anything.build_sam import Sam
 from segment_anything_ui.model_builder import (
     get_predictor, get_mask_generator, SamPredictor)
-from segment_anything_ui.utils import bounding_boxes
 try:
     from segment_anything_ui.model_builder import EfficientViTSamPredictor, EfficientViTSam
 except (ImportError, ModuleNotFoundError):
@@ -24,8 +23,7 @@ except (ImportError, ModuleNotFoundError):
 from skimage.measure import regionprops
 import torch
 
-from segment_anything_ui.utils.shapes import BoundingBox
-from segment_anything_ui.utils.bounding_boxes import get_bounding_boxes, get_mask_bounding_box
+from segment_anything_ui.utils.structures import Annotations, DrawnBoundingBox, get_mask_bounding_box
 
 
 def get_cmap(n, name='hsv'):
@@ -39,7 +37,7 @@ def get_cmap(n, name='hsv'):
 
 def crop_image(
         image,
-        box: BoundingBox | None = None,
+        box: DrawnBoundingBox | None = None,
         image_shape: tuple[int, int] | None = None
 ):
     if image_shape is None:
@@ -52,7 +50,7 @@ def crop_image(
     return cv2.resize(image[box.ystart:box.yend, box.xstart:box.xend, :], image_shape)
 
 
-def insert_image(image, box: BoundingBox | None = None):
+def insert_image(image, box: DrawnBoundingBox | None = None):
     new_image = np.zeros_like(image)
     if box is None:
         new_image = image
@@ -66,7 +64,7 @@ def insert_image(image, box: BoundingBox | None = None):
     return new_image
 
 
-def find_closest_bounding_box(bounding_boxes: list[BoundingBox], point: np.ndarray):
+def find_closest_bounding_box(bounding_boxes: list[DrawnBoundingBox], point: np.ndarray):
     closest_bounding_box = None
     closest_bounding_box_id = -1
     min_distance = float('inf')
@@ -125,210 +123,6 @@ class CustomForm(QWidget):
 
 
 @dataclasses.dataclass()
-class Annotation:
-    bounding_box: BoundingBox | None = None
-    mask_uid: str | None = None
-    mask_id: int | None = None
-    label: str | None = None
-
-    def __post_init__(self):
-        if self.mask is not None:
-            self.bounding_box = get_mask_bounding_box(self.mask)
-            
-            
-class Annotations:
-    """
-    Annotations is a class that contains a list of masks and their corresponding bounding boxes.
-    """
-    DEFAULT_LABEL = "default"
-    
-    def __init__(self) -> None:
-        self.annotations: list[Annotation] = []
-        self.current_annotation_id: int = -1
-        self.masks = []
-
-    def append(self, mask, label: str | None = None):
-        label = self.DEFAULT_LABEL if label is None else label
-        annotation = Annotation(
-            bounding_box=get_mask_bounding_box(mask, label),
-            mask_uid=str(uuid.uuid4()),
-            mask_id=len(self.masks),
-            label=label
-        )
-        self.masks.append(mask)
-        self.annotations.append(annotation)
-        return annotation
-    
-    def get_mask_by_uid(self, mask_uid: str):
-        mask_uuids = [annotation.mask_uid for annotation in self.annotations]
-        mask_id = mask_uuids.index(mask_uid)
-        return self.masks[mask_id]
-    
-    def get_label_by_id(self, mask_id: int):
-        return self.annotations[mask_id].label
-    
-    def get_mask_by_id(self, mask_id: int):
-        return self.masks[mask_id]
-    
-    def set_current_mask(self, mask: np.ndarray, label: str | None = None):
-        mask_id = self.current_annotation_id
-        if label is not None:
-            self.annotations[mask_id].label = label
-        self.masks[mask_id] = mask
-        
-    def get_current_mask(self):
-        mask_id = self.current_annotation_id
-        return self.masks[mask_id]
-    
-    def get_current_annotation(self):
-        return self.annotations[self.current_annotation_id]
-    
-    def get_bounding_boxes(self):
-        return [annotation.bounding_box for annotation in self.annotations]
-    
-    def remove_by_uid(self, mask_uid: str):
-        mask_uids = [annotation.mask_uid for annotation in self.annotations]
-        mask_id = mask_uids.index(mask_uid)
-        self.remove_by_id(mask_id)
-        return mask_uid
-    
-    def remove_by_id(self, mask_id: int):
-        self.masks.pop(mask_id)
-        self.annotations.pop(mask_id)
-        return mask_id
-    
-    @classmethod
-    def from_masks(cls, masks, labels: list[str] | None = None):
-        annotations = cls()
-        if labels is None:
-            labels = [cls.DEFAULT_LABEL] * len(masks)
-        for mask, label in zip(masks, labels):
-            annotations.append(mask, label)
-        return annotations
-
-    def __len__(self):
-        return len(self.annotations)
-    
-    def __getitem__(self, mask_uid: str):
-        return self.get_mask_by_uid(mask_uid)
-    
-    def __setitem__(self, mask_uid: str, value):
-        self.annotations[mask_uid] = value
-    
-    
-class BoundingBoxAnnotation:
-    def __init__(self) -> None:
-        self.bounding_boxes: list[BoundingBox] = []
-        self.bounding_box_id: int = -1
-
-    def append(self, bounding_box: BoundingBox):
-        self.bounding_boxes.append(bounding_box)
-    
-    def get_bounding_box(self, bounding_box_id: int):
-        return self.bounding_boxes[bounding_box_id]
-    
-    def get_current_bounding_box(self):
-        return self.bounding_boxes[self.bounding_box_id]
-    
-    def set_current_bounding_box(self, bounding_box: BoundingBox):
-        self.bounding_boxes[self.bounding_box_id] = bounding_box
-
-    def remove(self, mask_uid: str):
-        bounding_box_id = next((idx for idx, bounding_box in enumerate(self.bounding_boxes) if bounding_box.mask_uid == mask_uid), None)
-        if bounding_box_id is None:
-            return
-        bounding_box = self.bounding_boxes.pop(bounding_box_id)
-        if self.bounding_box_id >= bounding_box_id:
-            self.bounding_box_id -= 1
-        return bounding_box
-    
-    def remove_by_id(self, bounding_box_id: int):
-        mask_uid = self.bounding_boxes[bounding_box_id].mask_uid
-        self.remove(mask_uid)
-        return mask_uid
-
-    def __len__(self):
-        return len(self.bounding_boxes)
-
-    
-class MasksAnnotation:
-    DEFAULT_LABEL = "default"
-
-    def __init__(self) -> None:
-        self.masks = []
-        self.label_map = {}
-        self.masks_uids: list[str] = []
-        self.mask_id: int = -1
-
-    def add_mask(self, mask, label: str | None = None):
-        self.masks.append(mask)
-        self.masks_uids.append(str(uuid.uuid4()))
-        self.label_map[len(self.masks)] = self.DEFAULT_LABEL if label is None else label
-        return self.masks_uids[-1]
-
-    def add_label(self, mask_id: int, label: str):
-        self.label_map[mask_id] = label
-
-    def get_mask(self, mask_id: int):
-        return self.masks[mask_id]
-
-    def get_label(self, mask_id: int):
-        return self.label_map[mask_id]
-
-    def get_current_mask(self):
-        return self.masks[self.mask_id]
-
-    def set_current_mask(self, mask, label: str = None):
-        self.masks[self.mask_id] = mask
-        self.label_map[self.mask_id] = self.DEFAULT_LABEL if label is None else label
-
-    def __getitem__(self, mask_id: int):
-        return self.get_mask(mask_id)
-
-    def __setitem__(self, mask_id: int, value):
-        self.masks[mask_id] = value
-
-    def __len__(self):
-        return len(self.masks)
-
-    def __iter__(self):
-        return iter(zip(self.masks, self.label_map.values()))
-
-    def __next__(self):
-        if self.mask_id >= len(self.masks):
-            raise StopIteration
-        return self.masks[self.mask_id]
-
-    def append(self, mask, label: str | None = None):
-        return self.add_mask(mask, label)
-    
-    def pop_by_uuid(self, mask_uid: str):
-        mask_id = next((idx for idx, m_uid in enumerate(self.masks_uids) if m_uid == mask_uid), None)
-        if mask_id is None:
-            return
-        return self.pop(mask_id)
-
-    def pop(self, mask_id: int = -1):
-        _ = self.masks.pop(mask_id)
-        mask_uid = self.masks_uids.pop(mask_id)
-        self.label_map.pop(mask_id + 1)
-        new_label_map = {}
-        for index, value in enumerate(self.label_map.values()):
-            new_label_map[index + 1] = value
-        self.label_map = new_label_map
-        return mask_uid
-
-    @classmethod
-    def from_masks(cls, masks, labels: list[str] | None = None):
-        annotation = cls()
-        if labels is None:
-            labels = [None] * len(masks)
-        for mask, label in zip(masks, labels):
-            annotation.append(mask, label)
-        return annotation
-
-
-@dataclasses.dataclass()
 class Annotator:
     sam: Sam | EfficientViTSam | None = None
     embedding: torch.Tensor | None = None
@@ -342,7 +136,7 @@ class Annotator:
     parent: QWidget | None = None
     cmap: plt.cm = None
     original_image: np.ndarray | None = None
-    zoomed_bounding_box: BoundingBox | None = None
+    zoomed_bounding_box: DrawnBoundingBox | None = None
 
     def __post_init__(self):
         self.MAX_MASKS = 10
@@ -445,7 +239,7 @@ class Annotator:
             visualization[mask_argmax == i, :] = np.array(color[:3]) * 255
             border += single_mask - cv2.erode(
                 single_mask, np.ones((3, 3), np.uint8), iterations=1)
-            label = self.annotations.get_label_by_id(i)
+            label = self.annotations.get_label_by_id(i - 1)
             single_mask_center = np.mean(np.where(single_mask == 1), axis=1)
             if np.isnan(single_mask_center).any():
                 continue
@@ -466,7 +260,7 @@ class Annotator:
                         visualization,
                         (int(bounding_box.x_min * self.image.shape[1]), int(bounding_box.y_min * self.image.shape[0])),
                         (int(bounding_box.x_max * self.image.shape[1]), int(bounding_box.y_max * self.image.shape[0])),
-                        (0, 0, 255) if idx != self.bounding_boxes.bounding_box_id else (0, 255, 0),
+                        (0, 0, 255) if idx != self.annotations.current_annotation_id else (0, 255, 0),
                         2
                     )
                     cv2.putText(
@@ -530,6 +324,11 @@ class Annotator:
     def clear(self):
         self.last_mask = None
         self.visualization = None
-        self.masks = MasksAnnotation()
-        self.bounding_boxes = BoundingBoxAnnotation()
+        self.annotations = Annotations()
         self.partial_mask = None
+        
+    def switch_to_bounding_box_mode(self):
+        pass
+    
+    def switch_to_mask_mode(self):
+        pass

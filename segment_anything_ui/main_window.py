@@ -16,11 +16,7 @@ from segment_anything_ui.draw_label import DrawLabel
 from segment_anything_ui.image_pixmap import ImagePixmap
 from segment_anything_ui.model_builder import build_model
 from segment_anything_ui.settings_layout import SettingsLayout
-
-
-class AnnotationMode(Enum):
-    MASK = "mask"
-    BOUNDING_BOX = "bounding_box"
+from segment_anything_ui.utils.structures import AnnotationMode
 
 
 class SegmentAnythingUI(QWidget):

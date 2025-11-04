@@ -6,7 +6,8 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel, QLineEdit, QListWidget, QMessageBox
 
 from segment_anything_ui.draw_label import PaintType
-from segment_anything_ui.annotator import AutomaticMaskGeneratorSettings, CustomForm, MasksAnnotation
+from segment_anything_ui.annotator import AutomaticMaskGeneratorSettings, CustomForm
+from segment_anything_ui.utils.structures import Annotations
 
 
 class MergeState(enum.Enum):
@@ -94,20 +95,15 @@ class AnnotationLayout(QWidget):
     def on_delete_mask(self):
         if self.parent().image_label.paint_type == PaintType.MASK_PICKER:
             self.parent().info_label.setText("Deleting mask!")
-            mask_uid = self.parent().annotator.masks.pop(self.parent().annotator.masks.mask_id)
-            self.parent().annotator.bounding_boxes.remove(mask_uid)
-            self.parent().annotator.masks.mask_id = -1
+            self.parent().annotator.annotations.remove_by_id(self.parent().annotator.annotations.current_annotation_id)
+            self.parent().annotator.annotations.current_annotation_id = -1
             self.parent().annotator.last_mask = None
             self.parent().update(self.parent().annotator.merge_image_visualization())
         elif self.parent().image_label.paint_type == PaintType.BOX_PICKER:
             self.parent().info_label.setText("Deleting bounding box!")
-            mask_uid = self.parent().annotator.bounding_boxes.remove_by_id(
-                self.parent().annotator.bounding_boxes.bounding_box_id)
-            if mask_uid is not None:
-                self.parent().annotator.masks.pop_by_uuid(mask_uid)
-            self.parent().annotator.bounding_boxes.bounding_box_id = -1
+            self.parent().annotator.annotations.remove_by_id(self.parent().annotator.annotations.current_annotation_id)
             self.parent().annotator.last_mask = None
-            self.parent().annotator.masks.mask_id = -1
+            self.parent().annotator.annotations.current_annotation_id = -1
             self.parent().update(self.parent().annotator.merge_image_visualization())
         else:
             QMessageBox.warning(self, "Error", "Please pick a mask or bounding box to delete!")
@@ -123,7 +119,7 @@ class AnnotationLayout(QWidget):
             return ["default"]
         with open(config.label_file, "r") as f:
             labels = json.load(f)
-        MasksAnnotation.DEFAULT_LABEL = list(labels.keys())[0] if len(labels) > 0 else "default"
+        Annotations.DEFAULT_LABEL = list(labels.keys())[0] if len(labels) > 0 else "default"
         return labels
 
     def on_merge_masks(self):
@@ -144,22 +140,22 @@ class AnnotationLayout(QWidget):
 
     def on_remove_hidden_masks(self):
         self.parent().info_label.setText("Removing hidden masks!")
-        annotations = self.parent().annotator.masks
+        annotations = self.parent().annotator.annotations
         argmax_mask = self.parent().annotator.make_instance_mask()
         limit_ratio = float(self.remove_hidden_masks_line.text())
         new_masks = []
         new_labels = []
-        for idx, (mask, label) in enumerate(annotations):
+        for idx, (mask, annotation) in enumerate(annotations):
             num_pixels = np.sum(mask > 0)
             num_visible = np.sum(argmax_mask == (idx + 1))
             ratio = num_visible / num_pixels
 
             if ratio > limit_ratio:
                 new_masks.append(mask)
-                new_labels.append(label)
+                new_labels.append(annotation.label)
 
         print("Removed ", len(annotations) - len(new_masks), " masks.")
-        self.parent().annotator.masks = MasksAnnotation.from_masks(new_masks, new_labels)
+        self.parent().annotator.annotations = Annotations.from_masks(new_masks, new_labels)
         self.parent().update(self.parent().annotator.merge_image_visualization())
 
     def on_pick_mask(self):

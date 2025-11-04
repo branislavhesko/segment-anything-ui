@@ -7,9 +7,8 @@ import cv2
 import numpy as np
 from PySide6.QtWidgets import QPushButton, QWidget, QFileDialog, QVBoxLayout, QLineEdit, QLabel, QCheckBox, QMessageBox
 
-from segment_anything_ui.annotator import MasksAnnotation
 from segment_anything_ui.config import Config
-from segment_anything_ui.utils.bounding_boxes import BoundingBox
+from segment_anything_ui.utils.structures import Annotations, BoundingBox
 
 
 class FilesHolder:
@@ -181,7 +180,7 @@ class SettingsLayout(QWidget):
             single_mask[mask == int(str_index)] = 255
             masks.append(single_mask)
             new_labels.append(class_)
-        self.parent().annotator.masks = MasksAnnotation.from_masks(masks, new_labels)
+        self.parent().annotator.annotations = Annotations.from_masks(masks, new_labels)
         
     def _load_bounding_boxes(self, bounding_boxes):
         with open(bounding_boxes, "r") as f:
