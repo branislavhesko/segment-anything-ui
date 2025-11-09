@@ -283,7 +283,7 @@ class Annotator:
             multimask_output=False
         )
         mask = masks[0]
-        self.last_mask = insert_image(mask, self.zoomed_bounding_box) * 255
+        self.last_mask = (insert_image(mask, self.zoomed_bounding_box) * 255).astype(np.uint8)
 
     def pick_partial_mask(self):
         if self.partial_mask is None:
