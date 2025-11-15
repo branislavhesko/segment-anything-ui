@@ -44,8 +44,6 @@ class SettingsLayout(QWidget):
         self.actual_file: str = ""
         self.actual_shape = self.config.window_size
         self.layout = QVBoxLayout(self)
-        self.checkbox_bounding_box_vs_mask = QCheckBox("Bounding Box vs Mask")
-        self.checkbox_bounding_box_vs_mask.clicked.connect(self.on_toggle_bounding_box_vs_mask)
         self.open_files = QPushButton("Open Files")
         self.open_files.clicked.connect(self.on_open_files)
         self.next_file = QPushButton(f"Next File [ {config.key_mapping.NEXT_FILE.name} ]")
@@ -76,7 +74,6 @@ class SettingsLayout(QWidget):
         self.show_text.clicked.connect(self.on_show_text)
         self.tag_text_field = QLineEdit(self)
         self.tag_text_field.setPlaceholderText("Comma separated image tags")
-        self.layout.addWidget(self.checkbox_bounding_box_vs_mask)
         self.layout.addWidget(self.open_files)
         self.layout.addWidget(self.next_file)
         self.layout.addWidget(self.previous_file)
@@ -94,23 +91,24 @@ class SettingsLayout(QWidget):
         self.layout.addWidget(self.show_image)
         self.layout.addWidget(self.show_visualization)
         self.files = FilesHolder()
-        self.original_image = np.zeros((self.config.window_size[1], self.config.window_size[0], 3), dtype=np.uint8)
-        
-    def on_toggle_bounding_box_vs_mask(self, state: bool):
-        if state:
-            self.parent().switch_to_bounding_box_mode()
-        else:
-            self.parent().switch_to_mask_mode()
+        self.original_image = np.zeros((
+            self.config.window_size[1], 
+            self.config.window_size[0], 
+            3
+        ), dtype=np.uint8)
 
     def on_delete_existing_annotation(self):
         path = os.path.split(self.actual_file)[0]
         basename = os.path.splitext(os.path.basename(self.actual_file))[0]
         mask_path = os.path.join(path, basename + self.MASK_EXTENSION)
         labels_path = os.path.join(path, basename + self.LABELS_EXTENSION)
+        bounding_boxes_path = os.path.join(path, basename + self.BOUNDING_BOXES_EXTENSION)
         if os.path.exists(mask_path):
             os.remove(mask_path)
         if os.path.exists(labels_path):
             os.remove(labels_path)
+        if os.path.exists(bounding_boxes_path):
+            os.remove(bounding_boxes_path)
 
     def is_show_text(self):
         return self.show_text.isChecked()
@@ -186,7 +184,7 @@ class SettingsLayout(QWidget):
         with open(bounding_boxes, "r") as f:
             bounding_boxes: list[dict[str, float | str]] = json.load(f)
         for bounding_box in bounding_boxes:
-            self.parent().annotator.bounding_boxes.append(BoundingBox(**bounding_box))
+            self.parent().annotator.annotations.append_bounding_box(BoundingBox(**bounding_box))
     
     def on_show_image(self):
         self.parent().set_image(self.original_image, clear_annotations=False)

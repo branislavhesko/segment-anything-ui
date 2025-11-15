@@ -16,14 +16,12 @@ from segment_anything_ui.draw_label import DrawLabel
 from segment_anything_ui.image_pixmap import ImagePixmap
 from segment_anything_ui.model_builder import build_model
 from segment_anything_ui.settings_layout import SettingsLayout
-from segment_anything_ui.utils.structures import AnnotationMode
 
 
 class SegmentAnythingUI(QWidget):
 
     def __init__(self, config) -> None:
         super().__init__()
-        self.annotation_mode = AnnotationMode.MASK
         self.config: Config = config
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.setWindowTitle("Segment Anything UI")
@@ -75,14 +73,6 @@ class SegmentAnythingUI(QWidget):
     
     def get_bounding_boxes(self):
         return self.annotator.get_bounding_boxes()
-    
-    def switch_to_bounding_box_mode(self):
-        self.annotation_mode = AnnotationMode.BOUNDING_BOX
-        self.annotator.switch_to_bounding_box_mode()
-    
-    def switch_to_mask_mode(self):
-        self.annotation_mode = AnnotationMode.MASK
-        self.annotator.switch_to_mask_mode()
 
 
 if __name__ == '__main__':

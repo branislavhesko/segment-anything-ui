@@ -12,8 +12,6 @@ except ImportError:
     tqdm = None
     wget = None
 
-from segment_anything_ui.utils.structures import AnnotationMode
-
 
 @dataclasses.dataclass(frozen=True)
 class Keymap:
@@ -40,6 +38,7 @@ class KeyBindings:
     ADD_BOX: Keymap = Keymap(Qt.Key.Key_Q, "Q")
     ANNOTATE_ALL: Keymap = Keymap(Qt.Key.Key_Return, "Enter")
     MANUAL_POLYGON: Keymap = Keymap(Qt.Key.Key_R, "R")
+    MANUAL_BOUNDING_BOX: Keymap = Keymap(Qt.Key.Key_T, "T")
     CANCEL_ANNOTATION: Keymap = Keymap(Qt.Key.Key_C, "C")
     SAVE_ANNOTATION: Keymap = Keymap(Qt.Key.Key_S, "S")
     PICK_MASK: Keymap = Keymap(Qt.Key.Key_X, "X")
@@ -57,7 +56,6 @@ class KeyBindings:
 
 @dataclasses.dataclass
 class Config:
-    default_mode: AnnotationMode = AnnotationMode.MASK
     default_weights: Literal[
         "sam_vit_b_01ec64.pth", 
         "sam_vit_h_4b8939.pth", 

@@ -232,7 +232,7 @@ class Annotator:
         mask_argmax = self.make_instance_mask()
         visualization = np.zeros_like(self.image)
         border = np.zeros(self.image.shape[:2], dtype=np.uint8)
-        for i in range(1, np.amax(mask_argmax) + 1):
+        for i in range(1, len(self.annotations) + 1):
             color = self.cmap(i)
             single_mask = np.zeros_like(mask_argmax)
             single_mask[mask_argmax == i] = 1
@@ -240,19 +240,20 @@ class Annotator:
             border += single_mask - cv2.erode(
                 single_mask, np.ones((3, 3), np.uint8), iterations=1)
             label = self.annotations.get_label_by_id(i - 1)
-            single_mask_center = np.mean(np.where(single_mask == 1), axis=1)
-            if np.isnan(single_mask_center).any():
-                continue
-            if self.parent.settings.is_show_text():
-                cv2.putText(
-                    visualization,
-                    label,
-                    (int(single_mask_center[1]), int(single_mask_center[0])),
-                    cv2.FONT_HERSHEY_PLAIN,
-                    0.5,
-                    [255, 255, 255],
-                    1
-                )
+            if (single_mask == 1).any():
+                single_mask_center = np.mean(np.where(single_mask == 1), axis=1)
+                if np.isnan(single_mask_center).any():
+                    continue
+                if self.parent.settings.is_show_text():
+                    cv2.putText(
+                        visualization,
+                        label,
+                        (int(single_mask_center[1]), int(single_mask_center[0])),
+                        cv2.FONT_HERSHEY_PLAIN,
+                        0.5,
+                        [255, 255, 255],
+                        1
+                    )
             if self.is_show_bounding_boxes:
                 bounding_boxes = self.get_bounding_boxes()
                 for idx, bounding_box in enumerate(bounding_boxes):
@@ -279,6 +280,9 @@ class Annotator:
         return len(self.annotations) > 0
 
     def make_instance_mask(self):
+        if len(self.annotations.masks) == 0:
+            return np.zeros((self.image.shape[0], self.image.shape[1])).astype(np.uint8)
+        
         background = np.zeros_like(self.annotations.masks[0]) + 1
         mask_argmax = np.argmax(np.concatenate([np.expand_dims(background, 0), np.array(self.annotations.masks)], axis=0), axis=0).astype(np.uint8)
         return mask_argmax

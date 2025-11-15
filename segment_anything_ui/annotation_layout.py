@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel, QLineEd
 
 from segment_anything_ui.draw_label import PaintType
 from segment_anything_ui.annotator import AutomaticMaskGeneratorSettings, CustomForm
-from segment_anything_ui.utils.structures import Annotations
+from segment_anything_ui.utils.structures import Annotations, BoundingBox
 
 
 class MergeState(enum.Enum):
@@ -29,6 +29,7 @@ class AnnotationLayout(QWidget):
         self.add_box = QPushButton(f"Add Box [ {config.key_mapping.ADD_BOX.name} ]")
         self.annotate_all = QPushButton(f"Annotate All [ {config.key_mapping.ANNOTATE_ALL.name} ]")
         self.manual_polygon = QPushButton(f"Manual Polygon [ {config.key_mapping.MANUAL_POLYGON.name} ]")
+        self.manual_bounding_box = QPushButton(f"Manual Bounding Box [ {config.key_mapping.MANUAL_BOUNDING_BOX.name} ]")
         self.cancel_annotation = QPushButton(f"Cancel Annotation [ {config.key_mapping.CANCEL_ANNOTATION.name} ]")
         self.save_annotation = QPushButton(f"Save Annotation [ {config.key_mapping.SAVE_ANNOTATION.name} ]")
         self.pick_mask = QPushButton(f"Pick Mask [ {config.key_mapping.PICK_MASK.name} ]")
@@ -54,6 +55,7 @@ class AnnotationLayout(QWidget):
         self.partial_annotation.setShortcut(config.key_mapping.PARTIAL_ANNOTATION.key)
         self.delete_mask.setShortcut(config.key_mapping.DELETE_MASK.key)
         self.zoom_rectangle.setShortcut(config.key_mapping.ZOOM_RECTANGLE.key)
+        self.manual_bounding_box.setShortcut(config.key_mapping.MANUAL_BOUNDING_BOX.key)
 
         self.annotation_settings = CustomForm(self, AutomaticMaskGeneratorSettings())
         for w in [
@@ -69,6 +71,7 @@ class AnnotationLayout(QWidget):
                 self.partial_annotation,
                 self.save_annotation,
                 self.manual_polygon,
+                self.manual_bounding_box,
                 self.label_picker,
                 self.zoom_rectangle,
                 self.annotation_settings,
@@ -91,6 +94,7 @@ class AnnotationLayout(QWidget):
         self.partial_annotation.clicked.connect(self.on_partial_annotation)
         self.delete_mask.clicked.connect(self.on_delete_mask)
         self.zoom_rectangle.clicked.connect(self.on_zoom_rectangle)
+        self.manual_bounding_box.clicked.connect(self.on_manual_bounding_box)
 
     def on_delete_mask(self):
         if self.parent().image_label.paint_type == PaintType.MASK_PICKER:
@@ -170,6 +174,10 @@ class AnnotationLayout(QWidget):
         # Sets emphasis on the button
         self.manual_polygon.setProperty("active", True)
         self.parent().image_label.change_paint_type(PaintType.POLYGON)
+            
+    def on_manual_bounding_box(self):
+        self.parent().info_label.setText("Manual bounding box annotation!")
+        self.parent().image_label.change_paint_type(PaintType.BOX_MANUAL)
 
     def on_add_point(self):
         self.parent().info_label.setText("Adding point annotation!")
@@ -208,7 +216,17 @@ class AnnotationLayout(QWidget):
         if self.parent().image_label.paint_type == PaintType.POLYGON:
             self.parent().annotator.last_mask = self.parent().image_label.polygon.to_mask(
                 self.config.window_size[0], self.config.window_size[1])
-        self.parent().annotator.save_mask(label=self.label_picker.currentItem().text())
-        self.parent().update(self.parent().annotator.merge_image_visualization())
-        self.parent().image_label.clear()
-
+            self.parent().annotator.save_mask(label=self.label_picker.currentItem().text())
+            self.parent().update(self.parent().annotator.merge_image_visualization())
+            self.parent().image_label.clear()
+        elif self.parent().image_label.paint_type == PaintType.BOX_MANUAL:
+            label = self.label_picker.currentItem().text()
+            bounding_box = BoundingBox.from_drawn_bounding_box(
+                self.parent().image_label.bounding_box,
+                label,
+                self.config.window_size[0],
+                self.config.window_size[1]
+            )
+            self.parent().annotator.annotations.append_bounding_box(bounding_box)
+            self.parent().update(self.parent().annotator.merge_image_visualization())
+            self.parent().image_label.clear()
