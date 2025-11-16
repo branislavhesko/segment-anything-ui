@@ -38,6 +38,7 @@ class KeyBindings:
     ADD_BOX: Keymap = Keymap(Qt.Key.Key_Q, "Q")
     ANNOTATE_ALL: Keymap = Keymap(Qt.Key.Key_Return, "Enter")
     MANUAL_POLYGON: Keymap = Keymap(Qt.Key.Key_R, "R")
+    MANUAL_BOUNDING_BOX: Keymap = Keymap(Qt.Key.Key_T, "T")
     CANCEL_ANNOTATION: Keymap = Keymap(Qt.Key.Key_C, "C")
     SAVE_ANNOTATION: Keymap = Keymap(Qt.Key.Key_S, "S")
     PICK_MASK: Keymap = Keymap(Qt.Key.Key_X, "X")
@@ -69,7 +70,7 @@ class Config:
         "sam2.1_hiera_l.pth",
         "sam2.1_hiera_b+.pth",
         "sam2.1_hiera_s.pth",
-    ] = "sam_vit_h_4b8939.pth"
+    ] = "sam_vit_b_01ec64.pth"
     download_weights_if_not_available: bool = True
     label_file: str = "labels.json"
     window_size: tuple[int, int] | int = (1920, 1080)

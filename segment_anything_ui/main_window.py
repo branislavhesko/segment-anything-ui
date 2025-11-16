@@ -1,3 +1,4 @@
+from enum import Enum
 import logging
 import sys
 

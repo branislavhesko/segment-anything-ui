@@ -8,7 +8,8 @@ from PySide6 import QtCore, QtWidgets
 from PySide6.QtGui import QPainter, QPen
 
 from segment_anything_ui.config import Config
-from segment_anything_ui.utils.shapes import BoundingBox, Polygon
+from segment_anything_ui.annotator import find_closest_bounding_box
+from segment_anything_ui.utils.structures import DrawnBoundingBox, Polygon
 
 
 class PaintType(Enum):
@@ -19,6 +20,7 @@ class PaintType(Enum):
     MASK_PICKER = 4
     ZOOM_PICKER = 5
     BOX_PICKER = 6
+    BOX_MANUAL = 7
 
 
 class MaskIdPicker:
@@ -46,7 +48,7 @@ class DrawLabel(QtWidgets.QLabel):
         self.positive_points = []
         self.negative_points = []
         self.bounding_box = None
-        self.partial_box = BoundingBox(0, 0)
+        self.partial_box = DrawnBoundingBox(0, 0)
         self._paint_type = PaintType.POINT
         self.polygon = Polygon()
         self.mask_enum: MaskIdPicker = MaskIdPicker(3)
@@ -54,7 +56,7 @@ class DrawLabel(QtWidgets.QLabel):
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self._zoom_center = (0, 0)
         self._zoom_factor = 1.0
-        self._zoom_bounding_box: BoundingBox | None = None
+        self._zoom_bounding_box: DrawnBoundingBox | None = None
 
     def paintEvent(self, paint_event):
         painter = QPainter(self)
@@ -110,7 +112,7 @@ class DrawLabel(QtWidgets.QLabel):
         self._paint_type = paint_type
 
     def mouseMoveEvent(self, ev: PySide6.QtGui.QMouseEvent) -> None:
-        if self._paint_type in [PaintType.BOX, PaintType.ZOOM_PICKER]:
+        if self._paint_type in [PaintType.BOX, PaintType.ZOOM_PICKER, PaintType.BOX_MANUAL]:
             self.partial_box = copy.deepcopy(self.bounding_box)
             self.partial_box.xend = ev.pos().x()
             self.partial_box.yend = ev.pos().y()
@@ -139,16 +141,17 @@ class DrawLabel(QtWidgets.QLabel):
             elif cursor_event.button() == QtCore.Qt.RightButton:
                 self.negative_points.append(cursor_event.pos())
             # self.chosen_points.append(self.mapFromGlobal(QtGui.QCursor.pos()))
-        elif self._paint_type in [PaintType.BOX, PaintType.ZOOM_PICKER]:
+        elif self._paint_type in [PaintType.BOX, PaintType.ZOOM_PICKER, PaintType.BOX_MANUAL]:
             if cursor_event.button() == QtCore.Qt.LeftButton:
                 self.bounding_box.xend = cursor_event.pos().x()
                 self.bounding_box.yend = cursor_event.pos().y()
-                self.partial_box = BoundingBox(-1, -1, -1, -1)
+                self.partial_box = DrawnBoundingBox(-1, -1, -1, -1)
 
         if not self._paint_type == PaintType.MASK_PICKER and \
                 not self._paint_type == PaintType.ZOOM_PICKER and \
                 not self._paint_type == PaintType.POLYGON and \
-                not self._paint_type == PaintType.BOX_PICKER:
+                not self._paint_type == PaintType.BOX_PICKER and \
+                not self._paint_type == PaintType.BOX_MANUAL:
             self.parent().annotator.make_prediction(self.get_annotations())
             self.parent().annotator.visualize_last_mask()
 
@@ -162,8 +165,8 @@ class DrawLabel(QtWidgets.QLabel):
         self.update()
 
     def mousePressEvent(self, ev: PySide6.QtGui.QMouseEvent) -> None:
-        if self._paint_type in [PaintType.BOX, PaintType.ZOOM_PICKER] and ev.button() == QtCore.Qt.LeftButton:
-            self.bounding_box = BoundingBox(xstart=ev.pos().x(), ystart=ev.pos().y())
+        if self._paint_type in [PaintType.BOX, PaintType.ZOOM_PICKER, PaintType.BOX_MANUAL] and ev.button() == QtCore.Qt.LeftButton:
+            self.bounding_box = DrawnBoundingBox(xstart=ev.pos().x(), ystart=ev.pos().y())
 
         if self._paint_type == PaintType.POLYGON and ev.button() == QtCore.Qt.LeftButton:
             self.polygon.points.append([ev.pos().x(), ev.pos().y()])
@@ -173,7 +176,7 @@ class DrawLabel(QtWidgets.QLabel):
             point = [
                 int(ev.pos().x() / size.width() * self.config.window_size[0]),
                 int(ev.pos().y() / size.height() * self.config.window_size[1])]
-            masks = np.array(self.parent().annotator.masks.masks)
+            masks = np.array(self.parent().annotator.annotations.masks)
             mask_ids = np.where(masks[:, point[1], point[0]])[0]
             print("Picking mask at point: {}".format(point))
             if not(len(mask_ids)):
@@ -183,9 +186,9 @@ class DrawLabel(QtWidgets.QLabel):
                 label = None
             else:
                 mask_id = self.mask_enum.pick(mask_ids)
-                local_mask = self.parent().annotator.masks.get_mask(mask_id)
-                label = self.parent().annotator.masks.get_label(mask_id + 1)
-            self.parent().annotator.masks.mask_id = mask_id
+                local_mask = self.parent().annotator.annotations.get_mask_by_id(mask_id)
+                label = self.parent().annotator.annotations.get_label_by_id(mask_id)
+            self.parent().annotator.annotations.current_annotation_id = mask_id
             self.parent().annotator.last_mask = local_mask
             self.parent().annotator.visualize_last_mask(label)
         
@@ -194,16 +197,11 @@ class DrawLabel(QtWidgets.QLabel):
             point = [
                 float(ev.pos().x() / size.width()),
                 float(ev.pos().y() / size.height())]
-            bounding_box, bounding_box_id = self.parent().annotator.bounding_boxes.find_closest_bounding_box(point)
-            if bounding_box is None:
-                print("No bounding box found")
-            else:
-                self.parent().annotator.bounding_boxes.bounding_box_id = bounding_box_id
-            print(f"Bounding box: {bounding_box}")
-            print(f"Bounding box id: {bounding_box_id}")
+            all_bounding_boxes = self.parent().annotator.annotations.get_bounding_boxes()
+            bounding_box, bounding_box_id = find_closest_bounding_box(all_bounding_boxes, point)
+            self.parent().annotator.annotations.current_annotation_id = bounding_box_id
             self.parent().update(self.parent().annotator.merge_image_visualization())
-            
-        
+                 
         if self._paint_type == PaintType.POINT:
             point = ev.pos()
             if ev.button() == QtCore.Qt.LeftButton:
@@ -221,8 +219,8 @@ class DrawLabel(QtWidgets.QLabel):
         print(ev.key())
         if self._paint_type == PaintType.MASK_PICKER and ev.key() == QtCore.Qt.Key.Key_D and len(self.parent().annotator.masks):
             print("Deleting mask")
-            self.parent().annotator.masks.pop(self.parent().annotator.masks.mask_id)
-            self.parent().annotator.masks.mask_id = -1
+            self.parent().annotator.annotations.remove_by_id(self.parent().annotator.annotations.current_annotation_id)
+            self.parent().annotator.annotations.current_annotation_id = -1
             self.parent().annotator.last_mask = None
             self.parent().update(self.parent().annotator.merge_image_visualization())
 
@@ -263,6 +261,6 @@ class DrawLabel(QtWidgets.QLabel):
         self.positive_points = []
         self.negative_points = []
         self.bounding_box = None
-        self.partial_box = BoundingBox(0, 0, 0, 0)
+        self.partial_box = DrawnBoundingBox(0, 0, 0, 0)
         self.polygon = Polygon()
         self.update()
