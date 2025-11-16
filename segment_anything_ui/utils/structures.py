@@ -53,7 +53,6 @@ class Polygon:
             QPoint(x, y) for x, y in self.points
         ])
 
-
 def get_mask_bounding_box(mask, label: str):
     where = np.where(mask)
     x_min = np.min(where[1])
@@ -84,6 +83,7 @@ class BoundingBox:
     x_max: float
     y_max: float
     label: str
+    mask_id: int | None = None
     
     def to_dict(self):
         return {
@@ -92,6 +92,7 @@ class BoundingBox:
             "x_max": self.x_max,
             "y_max": self.y_max,
             "label": self.label,
+            "mask_id": self.mask_id if self.mask_id is not None else "",
         }
     
     @property
@@ -117,7 +118,8 @@ class BoundingBox:
             y_min=drawn_bounding_box.ystart / mask_height,
             x_max=drawn_bounding_box.xend / mask_width,
             y_max=drawn_bounding_box.yend / mask_height,
-            label=label
+            label=label,
+            mask_id=None
         )
 
 
@@ -171,8 +173,10 @@ class Annotations:
         mask_id = mask_uuids.index(mask_uid)
         return self.masks[mask_id]
     
-    def get_label_by_id(self, mask_id: int):
-        return self.annotations[mask_id].label
+    def get_label_by_id(self, mask_id: int): 
+        for annotation in self.annotations:
+            if annotation.mask_id == mask_id:
+                return annotation.label
     
     def get_mask_by_id(self, mask_id: int):
         return self.masks[mask_id]
@@ -190,7 +194,13 @@ class Annotations:
     def get_current_annotation(self):
         return self.annotations[self.current_annotation_id]
     
+    def _assign_mask_ids_to_bounding_boxes(self):
+        for annotation in self.annotations:
+            if annotation.mask_id is not None:
+                annotation.bounding_box.mask_id = annotation.mask_id
+    
     def get_bounding_boxes(self):
+        self._assign_mask_ids_to_bounding_boxes()
         return [annotation.bounding_box for annotation in self.annotations]
     
     def remove_by_uid(self, mask_uid: str):
@@ -203,9 +213,15 @@ class Annotations:
         annotation = self.annotations.pop(mask_id)
         if annotation.mask_id is not None:
             self.masks.pop(annotation.mask_id)
-        for annotation in self.annotations[mask_id:]:
-            annotation.adjust_mask_id(-1)
+            for annotation in self.annotations[mask_id:]:
+                annotation.adjust_mask_id(-1)
         return mask_id
+    
+    def get_labels(self):
+        return {(annotation.mask_id + 1): annotation.label for annotation in self._filter_no_mask_annotations()}
+    
+    def _filter_no_mask_annotations(self):
+        return [annotation for annotation in self.annotations if annotation.mask_id is not None]
     
     @classmethod
     def from_masks(cls, masks, labels: list[str] | None = None):

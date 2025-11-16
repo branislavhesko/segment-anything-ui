@@ -213,13 +213,7 @@ class AnnotationLayout(QWidget):
         self.parent().update(self.parent().annotator.merge_image_visualization())
 
     def on_save_annotation(self):
-        if self.parent().image_label.paint_type == PaintType.POLYGON:
-            self.parent().annotator.last_mask = self.parent().image_label.polygon.to_mask(
-                self.config.window_size[0], self.config.window_size[1])
-            self.parent().annotator.save_mask(label=self.label_picker.currentItem().text())
-            self.parent().update(self.parent().annotator.merge_image_visualization())
-            self.parent().image_label.clear()
-        elif self.parent().image_label.paint_type == PaintType.BOX_MANUAL:
+        if self.parent().image_label.paint_type == PaintType.BOX_MANUAL:
             label = self.label_picker.currentItem().text()
             bounding_box = BoundingBox.from_drawn_bounding_box(
                 self.parent().image_label.bounding_box,
@@ -228,5 +222,12 @@ class AnnotationLayout(QWidget):
                 self.config.window_size[1]
             )
             self.parent().annotator.annotations.append_bounding_box(bounding_box)
-            self.parent().update(self.parent().annotator.merge_image_visualization())
-            self.parent().image_label.clear()
+        else:
+            if self.parent().image_label.paint_type == PaintType.POLYGON:
+                self.parent().annotator.last_mask = self.parent().image_label.polygon.to_mask(
+                    self.config.window_size[0], self.config.window_size[1])
+            self.parent().annotator.save_mask(label=self.label_picker.currentItem().text())
+
+        self.parent().update(self.parent().annotator.merge_image_visualization())
+        self.parent().image_label.clear()
+         

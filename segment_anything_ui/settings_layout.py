@@ -125,6 +125,10 @@ class SettingsLayout(QWidget):
         self._load_image(file)
 
     def _load_image(self, file: str):
+        def filter_mask_bounding_boxes(bounding_boxes):
+            # To remove duplicate bounding boxes
+            return [bounding_box for bounding_box in bounding_boxes if bounding_box.get("mask_id", "") == ""]
+        
         mask = file.split(".")[0] + self.MASK_EXTENSION
         labels = file.split(".")[0] + self.LABELS_EXTENSION
         bounding_boxes = file.split(".")[0] + self.BOUNDING_BOXES_EXTENSION
@@ -145,8 +149,10 @@ class SettingsLayout(QWidget):
         self.original_image = image.copy()
         self.parent().set_image(image)
         if os.path.exists(mask) and os.path.exists(labels):
+            mask, labels = self._load_mask_labels_from_file(mask, labels)
             self._load_annotation(mask, labels)
             self.parent().info_label.setText(f"Loaded annotation from saved files! Image: {file}")
+            self._load_bounding_boxes(filter_mask_bounding_boxes(labels["bounding_boxes"]))
             self.parent().update(self.parent().annotator.merge_image_visualization())
         elif os.path.exists(bounding_boxes):
             self._load_bounding_boxes(bounding_boxes)
@@ -155,13 +161,16 @@ class SettingsLayout(QWidget):
         else:
             self.parent().info_label.setText(f"No annotation found! Image: {file}")
             self.tag_text_field.setText("")
-
-    def _load_annotation(self, mask, labels):
+            
+    def _load_mask_labels_from_file(self, mask, labels):
         mask = cv2.imread(mask, cv2.IMREAD_UNCHANGED)
         mask = cv2.resize(mask, (self.config.window_size[0], self.config.window_size[1]),
                           interpolation=cv2.INTER_NEAREST)
         with open(labels, "r") as fp:
             labels: dict[str, str] = json.load(fp)
+        return mask, labels
+
+    def _load_annotation(self, mask, labels):
         masks = []
         new_labels = []
         if "instances" in labels:
@@ -180,9 +189,10 @@ class SettingsLayout(QWidget):
             new_labels.append(class_)
         self.parent().annotator.annotations = Annotations.from_masks(masks, new_labels)
         
-    def _load_bounding_boxes(self, bounding_boxes):
-        with open(bounding_boxes, "r") as f:
-            bounding_boxes: list[dict[str, float | str]] = json.load(f)
+    def _load_bounding_boxes(self, bounding_boxes: str | list[dict[str, float | str]]):
+        if isinstance(bounding_boxes, str):
+            with open(bounding_boxes, "r") as f:
+                bounding_boxes: list[dict[str, float | str]] = json.load(f)
         for bounding_box in bounding_boxes:
             self.parent().annotator.annotations.append_bounding_box(BoundingBox(**bounding_box))
     
@@ -203,7 +213,7 @@ class SettingsLayout(QWidget):
         mask_path = os.path.join(path, basename + self.MASK_EXTENSION)
         labels_path = os.path.join(path, basename + self.LABELS_EXTENSION)
         masks = self.parent().get_mask()
-        labels = {"instances": self.parent().get_labels(), "tags": tags}
+        labels = {"instances": self.parent().get_labels(), "tags": tags, "bounding_boxes": self._get_bounding_boxes_dict()}
         with open(labels_path, "w") as f:
             json.dump(labels, f, indent=4)
         masks = cv2.resize(masks, self.actual_shape, interpolation=cv2.INTER_NEAREST)
@@ -218,12 +228,16 @@ class SettingsLayout(QWidget):
         self.files.add_files(files)
         self.on_next_file()
         
+    def _get_bounding_boxes_dict(self):
+        bounding_boxes = self.parent().get_bounding_boxes()
+        bounding_boxes_dict = [bounding_box.to_dict() for bounding_box in bounding_boxes]
+        return bounding_boxes_dict
+
     def on_save_bounding_boxes(self):
         path = os.path.split(self.actual_file)[0]
         basename = pathlib.Path(self.actual_file).stem
         bounding_boxes_path = os.path.join(path, basename + self.BOUNDING_BOXES_EXTENSION)
-        bounding_boxes = self.parent().get_bounding_boxes()
-        bounding_boxes_dict = [bounding_box.to_dict() for bounding_box in bounding_boxes]
+        bounding_boxes_dict = self._get_bounding_boxes_dict()
         with open(bounding_boxes_path, "w") as f:
             json.dump(bounding_boxes_dict, f, indent=4)
    

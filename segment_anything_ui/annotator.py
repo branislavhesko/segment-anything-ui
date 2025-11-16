@@ -205,8 +205,8 @@ class Annotator:
                 1.0,
                 [255, 255, 255],
                 2
-            )
-        if self.is_show_bounding_boxes:
+            )  
+        if self.is_show_bounding_boxes and last_mask[:, :, 1].any():
             last_mask_bounding_boxes = get_mask_bounding_box(last_mask[:, :, 1], label)
             cv2.rectangle(
                 last_mask,
