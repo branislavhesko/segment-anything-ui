@@ -2,11 +2,12 @@ import dataclasses
 import os
 from typing import Literal
 
-from PySide6.QtCore import Qt
 import requests
+from PySide6.QtCore import Qt
+
 try:
-    from tqdm import tqdm
     import wget
+    from tqdm import tqdm
 except ImportError:
     print("Tqdm and wget not found. Install with pip install tqdm wget")
     tqdm = None
@@ -24,8 +25,8 @@ class ProgressBar:
         self.progress_bar = None
 
     def __call__(self, current_bytes, total_bytes, width):
-        current_mb = round(current_bytes / 1024 ** 2, 1)
-        total_mb = round(total_bytes / 1024 ** 2, 1)
+        current_mb = round(current_bytes / 1024**2, 1)
+        total_mb = round(total_bytes / 1024**2, 1)
         if self.progress_bar is None:
             self.progress_bar = tqdm(total=total_mb, desc="MB")
         delta_mb = current_mb - self.progress_bar.n
@@ -57,11 +58,11 @@ class KeyBindings:
 @dataclasses.dataclass
 class Config:
     default_weights: Literal[
-        "sam_vit_b_01ec64.pth", 
-        "sam_vit_h_4b8939.pth", 
-        "sam_vit_l_0b3195.pth", 
-        "xl0.pt", 
-        "xl1.pt", 
+        "sam_vit_b_01ec64.pth",
+        "sam_vit_h_4b8939.pth",
+        "sam_vit_l_0b3195.pth",
+        "xl0.pt",
+        "xl1.pt",
         "sam_hq_vit_b.pth",
         "sam_hq_vit_l.pth",
         "sam_hq_vit_h.pth",
@@ -70,27 +71,29 @@ class Config:
         "sam2.1_hiera_l.pth",
         "sam2.1_hiera_b+.pth",
         "sam2.1_hiera_s.pth",
-    ] = "sam_vit_b_01ec64.pth"
+    ] = "sam2.1_hiera_l.pth"
     download_weights_if_not_available: bool = True
     label_file: str = "labels.json"
-    window_size: tuple[int, int] | int = (1920, 1080)
+    window_size: tuple[int, int] | int = (1280, 1280)
     key_mapping: KeyBindings = dataclasses.field(default_factory=KeyBindings)
-    weights_paths: dict[str, str] = dataclasses.field(default_factory=lambda: {
-        "l2": "https://huggingface.co/han-cai/efficientvit-sam/resolve/main/l2.pt",
-        "vit_b": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth",
-        "vit_h": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth",
-        "vit_l": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_l_0b3195.pth",
-        "xl0": "https://huggingface.co/han-cai/efficientvit-sam/resolve/main/xl0.pt",
-        "xl1": "https://huggingface.co/han-cai/efficientvit-sam/resolve/main/xl1.pt",
-        "hq_vit_b": "https://huggingface.co/lkeab/hq-sam/resolve/main/sam_hq_vit_b.pth",
-        "hq_vit_l": "https://huggingface.co/lkeab/hq-sam/resolve/main/sam_hq_vit_l.pth",
-        "hq_vit_h": "https://huggingface.co/lkeab/hq-sam/resolve/main/sam_hq_vit_h.pth",
-        "hq_vit_tiny": "https://huggingface.co/lkeab/hq-sam/resolve/main/sam_hq_vit_tiny.pth",
-        "sam2.1_hiera_t": "https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_tiny.pt",
-        "sam2.1_hiera_s": "https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_small.pt",
-        "sam2.1_hiera_b+": "https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_base_plus.pt",
-        "sam2.1_hiera_l": "https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_large.pt",
-    })
+    weights_paths: dict[str, str] = dataclasses.field(
+        default_factory=lambda: {
+            "l2": "https://huggingface.co/han-cai/efficientvit-sam/resolve/main/l2.pt",
+            "vit_b": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth",
+            "vit_h": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth",
+            "vit_l": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_l_0b3195.pth",
+            "xl0": "https://huggingface.co/han-cai/efficientvit-sam/resolve/main/xl0.pt",
+            "xl1": "https://huggingface.co/han-cai/efficientvit-sam/resolve/main/xl1.pt",
+            "hq_vit_b": "https://huggingface.co/lkeab/hq-sam/resolve/main/sam_hq_vit_b.pth",
+            "hq_vit_l": "https://huggingface.co/lkeab/hq-sam/resolve/main/sam_hq_vit_l.pth",
+            "hq_vit_h": "https://huggingface.co/lkeab/hq-sam/resolve/main/sam_hq_vit_h.pth",
+            "hq_vit_tiny": "https://huggingface.co/lkeab/hq-sam/resolve/main/sam_hq_vit_tiny.pth",
+            "sam2.1_hiera_t": "https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_tiny.pt",
+            "sam2.1_hiera_s": "https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_small.pt",
+            "sam2.1_hiera_b+": "https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_base_plus.pt",
+            "sam2.1_hiera_l": "https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_large.pt",
+        }
+    )
 
     def __post_init__(self):
         if isinstance(self.window_size, int):
@@ -128,11 +131,16 @@ class Config:
         if "sam2.1_hiera_s" in self.default_weights:
             return "sam2.1_hiera_s"
         raise ValueError("Unknown model name")
+
     def download_weights(self):
         if not os.path.exists(self.default_weights):
             try:
                 print(f"Downloading weights for model {self.get_sam_model_name()}")
-                wget.download(self.weights_paths[self.get_sam_model_name()], self.default_weights, bar=ProgressBar())
+                wget.download(
+                    self.weights_paths[self.get_sam_model_name()],
+                    self.default_weights,
+                    bar=ProgressBar(),
+                )
                 print(f"Downloaded weights to {self.default_weights}")
             except Exception as e:
                 print(f"Error downloading weights: {e}. Trying with requests.")

@@ -129,9 +129,10 @@ class SettingsLayout(QWidget):
             # To remove duplicate bounding boxes
             return [bounding_box for bounding_box in bounding_boxes if bounding_box.get("mask_id", "") == ""]
         
-        mask = file.split(".")[0] + self.MASK_EXTENSION
-        labels = file.split(".")[0] + self.LABELS_EXTENSION
-        bounding_boxes = file.split(".")[0] + self.BOUNDING_BOXES_EXTENSION
+        base_file, _ = os.path.splitext(file)
+        mask = base_file + self.MASK_EXTENSION
+        labels = base_file + self.LABELS_EXTENSION
+        bounding_boxes = base_file + self.BOUNDING_BOXES_EXTENSION
         image = cv2.imread(file, cv2.IMREAD_UNCHANGED)
         self.actual_shape = image.shape[:2][::-1]
         self.actual_file = file
