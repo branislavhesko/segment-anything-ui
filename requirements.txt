@@ -7,4 +7,5 @@ segment-anything
 matplotlib
 scikit-image
 tqdm
+requests
 wget
